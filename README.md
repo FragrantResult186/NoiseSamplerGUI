@@ -5,6 +5,7 @@ This is a Java GUI application designed to help users efficiently explore Minecr
 
 
 Well, I'm a beginner, so this code might seem really bad to others. Please forgive me.
+
 ---
 
 ## Features  
