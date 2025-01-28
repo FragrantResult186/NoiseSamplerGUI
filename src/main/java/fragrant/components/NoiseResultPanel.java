@@ -4,6 +4,7 @@ import javax.swing.plaf.basic.BasicMenuItemUI;
 import javax.swing.*;
 
 import fragrant.memory.SeedMemoryStorage;
+import fragrant.settings.AppSettings;
 import fragrant.memory.SeedMemory;
 
 import java.awt.datatransfer.StringSelection;
@@ -14,16 +15,27 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 public class NoiseResultPanel extends JPanel {
     private final DefaultListModel<SeedMemory> seedListModel;
     private final JList<SeedMemory> seedList;
     private final JPopupMenu popupMenu;
     private final JTextField descriptionField;
+    private final BlockingQueue<SeedMemory> resultQueue;
+    private volatile boolean isProcessing = false;
+    private static final int SAVE_INTERVAL = 5000;
+    private long lastSaveTime = 0;
+    private static final int MAX_BATCH_SIZE = 100;
 
     public NoiseResultPanel() {
-        setLayout(new BorderLayout());
         seedListModel = new DefaultListModel<>();
+        resultQueue = new LinkedBlockingQueue<>(1000);
+        startResultProcessor();
+
+        setLayout(new BorderLayout());
         seedList = new JList<>(seedListModel);
         seedList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setBorder(BorderFactory.createTitledBorder("Search Results"));
@@ -144,12 +156,6 @@ public class NoiseResultPanel extends JPanel {
         popupMenu.show(seedList, e.getX(), e.getY());
     }
 
-    public void addSeed(long seed) {
-        String description = descriptionField.getText().trim();
-        seedListModel.addElement(new SeedMemory(seed, description));
-        saveMemories();
-    }
-
     private void copySelectedSeeds() {
         List<SeedMemory> selectedMemories = seedList.getSelectedValuesList();
         String text = selectedMemories.stream()
@@ -205,5 +211,93 @@ public class NoiseResultPanel extends JPanel {
                 }
             }
         });
+    }
+
+    public DefaultListModel<SeedMemory> getSeedListModel() {
+        return seedListModel;
+    }
+
+    private void startResultProcessor() {
+        Thread processor = new Thread(() -> {
+            List<SeedMemory> currentBatch = new ArrayList<>();
+            
+            while (true) {
+                try {
+                    if (!isProcessing) {
+                        Thread.sleep(100);
+                        continue;
+                    }
+                    
+                    SeedMemory seed = resultQueue.poll(100, TimeUnit.MILLISECONDS);
+                    if (seed != null) {
+                        currentBatch.add(seed);
+                        
+                        if (currentBatch.size() >= MAX_BATCH_SIZE || 
+                            (currentBatch.size() > 0 && resultQueue.isEmpty())) {
+                            
+                            final List<SeedMemory> batchToAdd = new ArrayList<>(currentBatch);
+                            SwingUtilities.invokeLater(() -> {
+                                if (seedListModel.size() < getMaxResults()) {
+                                    for (SeedMemory mem : batchToAdd) {
+                                        seedListModel.addElement(mem);
+                                    }
+                                    
+                                    long currentTime = System.currentTimeMillis();
+                                    if (currentTime - lastSaveTime > SAVE_INTERVAL) {
+                                        saveMemories();
+                                        lastSaveTime = currentTime;
+                                    }
+                                    
+                                    if (seedListModel.size() >= getMaxResults()) {
+                                        stopProcessing();
+                                    }
+                                }
+                            });
+                            currentBatch.clear();
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        });
+        processor.setDaemon(true);
+        processor.start();
+    }
+    
+    private int getMaxResults() {
+        return AppSettings.getMaxSeeds();
+    }
+    
+    public void startProcessing() {
+        isProcessing = true;
+    }
+    
+    public void stopProcessing() {
+        isProcessing = false;
+        saveMemories();
+
+        if (seedListModel.size() >= getMaxResults()) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(this,
+                    "Maximum result count (" + getMaxResults() + ") reached. Search stopped.",
+                    "Search Limit",
+                    JOptionPane.WARNING_MESSAGE);
+            });
+        }
+    }
+
+    public void addSeed(long seed) {
+        if (seedListModel.size() >= getMaxResults()) {
+            return;
+        }
+        
+        String description = descriptionField.getText().trim();
+        try {
+            resultQueue.offer(new SeedMemory(seed, description), 50, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 }

@@ -36,6 +36,7 @@ import javax.swing.Box;
 import fragrant.memory.SearchConditionStorage;
 import fragrant.search.HeightSearchCondition;
 import fragrant.search.NoiseSearchCondition;
+import fragrant.settings.AppSettings;
 import fragrant.MainUI;
 
 import nl.kallestruik.noisesampler.NoiseSampler;
@@ -405,6 +406,7 @@ public class NoiseSearchPanel extends JPanel {
     }
 
     private void startSearch() {
+        mainWindow.getResultPanel().startProcessing();
         if (searchConditions.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Please add at least one noise condition.",
@@ -538,6 +540,11 @@ public class NoiseSearchPanel extends JPanel {
                     "Input Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+
+        if (mainWindow.getResultPanel().getSeedListModel().size() >= AppSettings.getMaxSeeds()) {
+            stopSearch();
+            return;
+        }
     }
     
     private void stopSearch() {
@@ -551,6 +558,7 @@ public class NoiseSearchPanel extends JPanel {
         threadCountSpinner.setEnabled(true);
         mainWindow.stopSearch();
         startSeedField.setText(String.valueOf(lastProcessedSeed + 1));
+        mainWindow.getResultPanel().stopProcessing();
     }
 
     private void addNoiseCondition() {
@@ -576,15 +584,18 @@ public class NoiseSearchPanel extends JPanel {
         if (!searchConditions.stream().allMatch(condition -> condition.checkCondition(sampler))) {
             return false;
         }
-
+        
         if (!heightConditions.isEmpty()) {
             SeedChecker checker = new SeedChecker(seed);
-            return heightConditions.stream().allMatch(condition -> condition.checkCondition(checker));
+            if (!heightConditions.stream().allMatch(condition -> condition.checkCondition(checker))) {
+                return false;
+            }
         }
-
-        return true;
+    
+        SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(seed));
+        return false;
     }
-
+    
     public void removeCondition(NoiseSearchCondition condition) {
         searchConditions.remove(condition);
         conditionsPanel.remove(condition);

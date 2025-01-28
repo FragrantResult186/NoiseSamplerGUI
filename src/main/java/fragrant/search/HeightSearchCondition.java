@@ -32,12 +32,12 @@ public class HeightSearchCondition extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Height Condition"));
 
-        minXSpinner = new JSpinner(new SpinnerNumberModel(0, -30000000, 30000000, 1));
-        maxXSpinner = new JSpinner(new SpinnerNumberModel(0, -30000000, 30000000, 1));
-        minZSpinner = new JSpinner(new SpinnerNumberModel(0, -30000000, 30000000, 1));
-        maxZSpinner = new JSpinner(new SpinnerNumberModel(0, -30000000, 30000000, 1));
-        minHeightSpinner = new JSpinner(new SpinnerNumberModel(-64, -64, 319, 1));
-        maxHeightSpinner = new JSpinner(new SpinnerNumberModel(319, -64, 319, 1));
+        minXSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxXSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minZSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxZSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minHeightSpinner = new JSpinner(new SpinnerNumberModel(-64, -64, 256, 1));
+        maxHeightSpinner = new JSpinner(new SpinnerNumberModel(256, -64, 256, 1));
 
         JPanel fieldsPanel = new JPanel();
         fieldsPanel.setLayout(new GridBagLayout());
@@ -85,8 +85,8 @@ public class HeightSearchCondition extends JPanel {
 
         for (int x = minX; x <= maxX; x++) {
             for (int z = minZ; z <= maxZ; z++) {
-                int highestY = -60;
-                for (int y = 254; y >= -60; y--) {
+                int highestY = -64;
+                for (int y = 256; y >= -64; y--) {
                     var blockState = checker.getBlockState(x, y, z);
                     if (!blockState.isAir()) {
                         highestY = y;

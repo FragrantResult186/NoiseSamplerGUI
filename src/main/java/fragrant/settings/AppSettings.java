@@ -8,7 +8,8 @@ public class AppSettings {
     private static final Preferences PREFS = Preferences.userNodeForPackage(AppSettings.class);
     private static final String FONT_SIZE = "fontSize";
     private static final String THEME = "theme";
-    
+    private static final String MAX_SEEDS = "maxSeeds";
+
     public static int getFontSize() {
         return PREFS.getInt(FONT_SIZE, 12);
     }
@@ -24,6 +25,14 @@ public class AppSettings {
     
     public static void setTheme(String theme) {
         PREFS.put(THEME, theme);
+    }
+
+    public static int getMaxSeeds() {
+        return PREFS.getInt(MAX_SEEDS, 10000);
+    }
+    
+    public static void setMaxSeeds(int count) {
+        PREFS.putInt(MAX_SEEDS, count);
     }
     
     private static void updateGlobalFontSize(int size) {

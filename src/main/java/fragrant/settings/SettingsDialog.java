@@ -7,7 +7,8 @@ public class SettingsDialog extends JDialog {
     private JSpinner fontSizeSpinner;
     private JToggleButton lightThemeButton;
     private JToggleButton darkThemeButton;
-    
+    private JSpinner maxSeedsSpinner;
+
     public SettingsDialog(Frame owner) {
         super(owner, "Settings", true);
         
@@ -28,6 +29,14 @@ public class SettingsDialog extends JDialog {
         gbc.insets = new Insets(0, 20, 20, 20);
         mainPanel.add(createFontPanel(), gbc);
         
+        gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 0, 0);
+        mainPanel.add(Box.createVerticalStrut(25), gbc);
+        
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 20, 20, 20);
+        mainPanel.add(createMaxSeedsPanel(), gbc);
+
         JPanel buttonPanel = createButtonPanel();
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
         
@@ -86,7 +95,24 @@ public class SettingsDialog extends JDialog {
         
         return panel;
     }
-    
+
+    private JPanel createMaxSeedsPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("Maximum Seeds"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        maxSeedsSpinner = new JSpinner(new SpinnerNumberModel(
+            AppSettings.getMaxSeeds(), 100, 1000000, 100));
+        maxSeedsSpinner.setPreferredSize(new Dimension(100, 25));
+        
+        GridBagConstraints gbc = new GridBagConstraints();
+        panel.add(maxSeedsSpinner, gbc);
+        
+        return panel;
+    }
+
     private JPanel createButtonPanel() {
         JPanel panel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         
@@ -117,10 +143,12 @@ public class SettingsDialog extends JDialog {
         } else {
             lightThemeButton.setSelected(true);
         }
+        maxSeedsSpinner.setValue(AppSettings.getMaxSeeds());
     }
     
     private void saveSettings() {
         AppSettings.setTheme(darkThemeButton.isSelected() ? "dark" : "light");
         AppSettings.setFontSize((Integer)fontSizeSpinner.getValue());
+        AppSettings.setMaxSeeds((Integer)maxSeedsSpinner.getValue());
     }
 }

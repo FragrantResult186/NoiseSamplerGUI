@@ -90,17 +90,16 @@ public class NoiseSearchCondition extends JPanel {
 
         noiseTypeCombo = new JComboBox<>(NoiseType.values());
 
-        minXSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
-        maxXSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
-        minYSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
-        maxYSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
-        minZSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
-        maxZSpinner = new JSpinner(new SpinnerNumberModel(0, -1000, 1000, 1));
+        minXSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxXSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minYSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxYSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minZSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxZSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        thresholdSpinner = new JSpinner(new SpinnerNumberModel(0.00, -10.0, 10.0, 0.1));
 
-        thresholdSpinner = new JSpinner(new SpinnerNumberModel(0.0, -1000.0, 1000.0, 0.1));
-
-        thresholdConditionCombo = new JComboBox<>(new String[]{"Threshold or above", "Threshold or below"});
-        conditionTypeCombo = new JComboBox<>(new String[]{"All coordinates must match", "At least one coordinate must match"});
+        thresholdConditionCombo = new JComboBox<>(new String[]{"Above threshold", "Below threshold"});
+        conditionTypeCombo = new JComboBox<>(new String[]{"All coordinates match", "Any coordinate matches"});
 
         JButton deleteButton = new JButton("Delete");
         deleteButton.addActionListener(e -> parentPanel.removeCondition(this));
