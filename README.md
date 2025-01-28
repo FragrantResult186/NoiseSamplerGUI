@@ -1,7 +1,10 @@
 # NoiseSamplerGUI  
+NoiseSamplerGUI supports Minecraft Java 1.18.1.
+
 This is a Java GUI application designed to help users efficiently explore Minecraft seeds. It utilizes two external repositories: [noise-sampler](https://github.com/KalleStruik/noise-sampler) and [seed-checker](https://github.com/jellejurre/seed-checker/tree/1.18.1).  
 
 
+Well, I'm a beginner, so this code might seem really bad to others. Please forgive me.
 ---
 
 ## Features  
