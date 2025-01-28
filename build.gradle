@@ -1,0 +1,103 @@
+plugins {
+    id 'fabric-loom' version '0.10-SNAPSHOT'
+    id 'maven-publish'
+    id 'com.github.johnrengelman.shadow' version '7.0.0'
+}
+
+repositories {
+    maven {url "https://jitpack.io"}
+    maven { url "https://repo.jellejurre.dev" }
+    mavenLocal()
+}
+
+sourceCompatibility = JavaVersion.VERSION_16
+targetCompatibility = JavaVersion.VERSION_16
+
+version = project.version
+group = project.maven_group
+def ENV = System.getenv()
+
+dependencies {
+    implementation 'com.formdev:flatlaf:3.5.4'
+    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
+
+    minecraft "com.mojang:minecraft:1.18.1"
+    mappings "com.github.jellejurre:yarn:1156d87670"
+    modImplementation "net.fabricmc:fabric-loader:0.12.12"
+
+    implementation('com.google.guava:guava:20.0.0-android')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+
+    implementation 'com.github.KalleStruik:noise-sampler:1.20.0'
+    implementation('com.github.jellejurre:seed-checker:1.2.0-1.18.1'){transitive=false}
+}
+
+processResources {
+    inputs.property "version", project.version
+
+    from(sourceSets.main.resources.srcDirs) {
+        include "fabric.mod.json"
+        expand "version": project.version
+        duplicatesStrategy DuplicatesStrategy.INCLUDE
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = "UTF-8"
+}
+
+jar {
+    from "LICENSE"
+    manifest {
+        attributes(
+            'Multi-Release': 'true',
+            'Main-Class': 'fragrant.MainUI'
+        )
+    }
+}
+
+shadowJar {
+    dependsOn build
+    manifest {
+        attributes(
+            'Main-Class': 'fragrant.MainUI'
+        )
+    }
+    mergeServiceFiles()
+    configurations = [project.configurations.compileClasspath]
+
+    archiveBaseName.set("NoiseSamplerGUI")
+    archiveClassifier.set("")
+    archiveVersion.set("1.0.0")
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) {
+            artifactId = archivesBaseName
+            version = version
+            groupId = group
+            artifact(tasks["shadowJar"]){
+                classifier = ""
+            }
+        }
+    }
+
+    if (ENV.MAVEN_URL) {
+        maven {
+            url ENV.MAVEN_URL
+            credentials {
+                username ENV.MAVEN_USERNAME
+                password ENV.MAVEN_PASSWORD
+            }
+        }
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
