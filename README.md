@@ -29,7 +29,7 @@ You can save noise and height conditions in JSON format for future use.
 
 > Well, I'm a beginner, so this code might seem really bad to others. Please forgive me.
 
-> This might sound strange because it's translated by a Japanese person. If you have any questions, please feel free to contact me on Discord at [My Discord](discordapp.com/users/811496361098608660).
+> This might sound strange because it's translated by a Japanese person. If you have any questions, please feel free to contact me on [My Discord](discordapp.com/users/811496361098608660).
 
 ---
 
