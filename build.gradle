@@ -72,7 +72,7 @@ shadowJar {
 
     archiveBaseName.set("NoiseSamplerGUI")
     archiveClassifier.set("")
-    archiveVersion.set("1.0.0")
+    archiveVersion.set("1.1.0")
 }
 
 publishing {
