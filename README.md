@@ -26,6 +26,11 @@ You can save noise and height conditions in JSON format for future use.
 
 ---
 
+<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/image1.png" width="500"/>
+<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/image2.png" width="500"/>
+
+---
+
 ## Credits  
 - [jellejurre](https://github.com/jellejurre)  
 - [KalleStruik](https://github.com/KalleStruik)  
