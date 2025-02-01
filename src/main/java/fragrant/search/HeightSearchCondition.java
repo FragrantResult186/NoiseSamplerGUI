@@ -53,10 +53,18 @@ public class HeightSearchCondition extends JPanel {
         addComponent(fieldsPanel, "Max Height:", maxHeightSpinner, gbc, 5);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton upButton = new JButton("↑");
+        JButton downButton = new JButton("↓");
         JButton deleteButton = new JButton("Delete");
+    
+        upButton.addActionListener(e -> parentPanel.moveConditionUp(this));
+        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));    
         deleteButton.addActionListener(e -> parentPanel.removeHeightCondition(this));
-        buttonPanel.add(deleteButton);
 
+        buttonPanel.add(upButton);
+        buttonPanel.add(downButton);
+        buttonPanel.add(deleteButton);
+        
         add(fieldsPanel);
         add(buttonPanel);
     }

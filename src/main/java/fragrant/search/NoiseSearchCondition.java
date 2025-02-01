@@ -100,8 +100,13 @@ public class NoiseSearchCondition extends JPanel {
 
         thresholdConditionCombo = new JComboBox<>(new String[]{"Above threshold", "Below threshold"});
         conditionTypeCombo = new JComboBox<>(new String[]{"All coordinates match", "Any coordinate matches"});
-
+        
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton upButton = new JButton("↑");
+        JButton downButton = new JButton("↓");
         JButton deleteButton = new JButton("Delete");
+        upButton.addActionListener(e -> parentPanel.moveConditionUp(this));
+        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));    
         deleteButton.addActionListener(e -> parentPanel.removeCondition(this));
 
         JPanel fieldsPanel = new JPanel();
@@ -121,9 +126,10 @@ public class NoiseSearchCondition extends JPanel {
         addComponent(fieldsPanel, "Threshold Condition:", thresholdConditionCombo, gbc, 8);
         addComponent(fieldsPanel, "Condition:", conditionTypeCombo, gbc, 9);
 
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(upButton);
+        buttonPanel.add(downButton);
         buttonPanel.add(deleteButton);
-
+    
         add(fieldsPanel);
         add(buttonPanel);
     }

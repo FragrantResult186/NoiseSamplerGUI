@@ -9,6 +9,7 @@ import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.io.FileReader;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -44,26 +45,30 @@ import nl.jellejurre.seedchecker.SeedChecker;
 import nl.kallestruik.noisesampler.NoiseType;
 
 public class NoiseSearchPanel extends JPanel {
+    private static final int MAX_THREADS = Runtime.getRuntime().availableProcessors();
+
     private final List<NoiseSearchCondition> searchConditions;
-    private final List<Future<?>> searchTasks;
+    private final List<HeightSearchCondition> heightConditions = new ArrayList<>();
+
+    private volatile long lastProcessedSeed = 0;
+    private final List<Long> seedsFromFile = new ArrayList<>();
+
     private final MainUI mainWindow;
     private JTextField startSeedField;
-    private JPanel conditionsPanel;
-    private ExecutorService executorService;
-    private volatile boolean isSearching = false;
-    private final JButton startSearchButton;
-    private final JButton stopSearchButton;
-    private volatile long lastProcessedSeed = 0;
-    private JSpinner threadCountSpinner;
-    private static final int MAX_THREADS = Runtime.getRuntime().availableProcessors();
-    private JComboBox<String> seedRangeCombo;
     private JTextField fixedBitsField;
     private JTextField seedFileField;
     private JButton browseSeedFileButton;
-    private final List<Long> seedsFromFile = new ArrayList<>();
-    private CardLayout contentCardLayout;
+    private JButton startSearchButton;
+    private JButton stopSearchButton;
+    private JSpinner threadCountSpinner;
+    private JComboBox<String> seedRangeCombo;
+    private JPanel conditionsPanel;
     private JPanel contentPanel;
-    private final List<HeightSearchCondition> heightConditions = new ArrayList<>();
+    private CardLayout contentCardLayout;
+
+    private ExecutorService executorService;
+    private final List<Future<?>> searchTasks;
+    private volatile boolean isSearching = false;
 
     public NoiseSearchPanel(MainUI mainWindow) {
         this.mainWindow = mainWindow;
@@ -407,9 +412,17 @@ public class NoiseSearchPanel extends JPanel {
 
     private void startSearch() {
         mainWindow.getResultPanel().startProcessing();
-        if (searchConditions.isEmpty()) {
+        /* if (searchConditions.isEmpty()) {
+        JOptionPane.showMessageDialog(this,
+                "Please add at least one noise condition.",
+                "No Conditions",
+                JOptionPane.WARNING_MESSAGE);
+        return;
+        } */
+
+        if (searchConditions.isEmpty() && heightConditions.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Please add at least one noise condition.",
+                    "Please add at least one search condition.",
                     "No Conditions",
                     JOptionPane.WARNING_MESSAGE);
             return;
@@ -611,6 +624,66 @@ public class NoiseSearchPanel extends JPanel {
         updateConditionsPanelSize();
         conditionsPanel.revalidate();
         conditionsPanel.repaint();
+    }
+
+    public void moveConditionUp(Object condition) {
+        int index = -1;
+        for (int i = 0; i < conditionsPanel.getComponentCount(); i++) {
+            if (conditionsPanel.getComponent(i) == condition) {
+                index = i;
+                break;
+            }
+        }
+    
+        if (index > 0) {
+            conditionsPanel.remove(index);
+            conditionsPanel.add((java.awt.Component)condition, index - 1);
+    
+            if (condition instanceof NoiseSearchCondition) {
+                int noiseIndex = searchConditions.indexOf(condition);
+                if (noiseIndex > 0) {
+                    Collections.swap(searchConditions, noiseIndex, noiseIndex - 1);
+                }
+            } else if (condition instanceof HeightSearchCondition) {
+                int heightIndex = heightConditions.indexOf(condition);
+                if (heightIndex > 0) {
+                    Collections.swap(heightConditions, heightIndex, heightIndex - 1);
+                }
+            }
+    
+            conditionsPanel.revalidate();
+            conditionsPanel.repaint();
+        }
+    }
+    
+    public void moveConditionDown(Object condition) {
+        int index = -1;
+        for (int i = 0; i < conditionsPanel.getComponentCount(); i++) {
+            if (conditionsPanel.getComponent(i) == condition) {
+                index = i;
+                break;
+            }
+        }
+        
+        if (index < conditionsPanel.getComponentCount() - 1) {
+            conditionsPanel.remove(index);
+            conditionsPanel.add((java.awt.Component)condition, index + 1);
+            
+            if (condition instanceof NoiseSearchCondition) {
+                int noiseIndex = searchConditions.indexOf(condition);
+                if (noiseIndex < searchConditions.size() - 1) {
+                    Collections.swap(searchConditions, noiseIndex, noiseIndex + 1);
+                }
+            } else if (condition instanceof HeightSearchCondition) {
+                int heightIndex = heightConditions.indexOf(condition);
+                if (heightIndex < heightConditions.size() - 1) {
+                    Collections.swap(heightConditions, heightIndex, heightIndex + 1);
+                }
+            }
+            
+            conditionsPanel.revalidate();
+            conditionsPanel.repaint();
+        }
     }
 
     public void removeHeightCondition(HeightSearchCondition condition) {

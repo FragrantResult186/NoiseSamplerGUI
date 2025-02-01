@@ -23,8 +23,8 @@ import javax.swing.Timer;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 
+import fragrant.components.mapviewer.MapViewerPanel;
 import fragrant.components.HeightCheckerPanel;
-import fragrant.components.MapViewerPanel;
 import fragrant.memory.SearchConditionStorage;
 import fragrant.components.NoiseResultPanel;
 import fragrant.components.NoiseSearchPanel;
@@ -32,20 +32,23 @@ import fragrant.settings.SettingsDialog;
 import fragrant.settings.AppSettings;
 
 public class MainUI extends JFrame {
+    private final Timer statusUpdateTimer;
+
     private final NoiseSearchPanel searchPanel;
     private final NoiseResultPanel resultPanel;
+    private HeightCheckerPanel heightCheckerPanel;
+    private final MapViewerPanel mapViewerPanel;
+
     private final JPanel statusPanel;
     private JLabel seedCountLabel;
     private JLabel speedLabel;
     private JLabel elapsedTimeLabel;
-    private final Timer statusUpdateTimer;
+
     private long processedSeeds = 0;
     private Instant startTime;
-    private HeightCheckerPanel heightCheckerPanel;
-    private final MapViewerPanel mapViewerPanel;
 
     public MainUI() {
-        setTitle("Noise Sampler Search");
+        setTitle("Noise Sampler GUI");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
