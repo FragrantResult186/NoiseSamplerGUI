@@ -5,16 +5,16 @@ plugins {
 }
 
 repositories {
-    maven {url "https://jitpack.io"}
+    maven { url "https://jitpack.io" }
     maven { url "https://repo.jellejurre.dev" }
-    mavenLocal()
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
-version = project.version
-group = project.maven_group
+version = "1.3.0"
+group = "fragrant.noisesampler"
+
 def ENV = System.getenv()
 
 dependencies {
@@ -26,14 +26,13 @@ dependencies {
     mappings "com.github.jellejurre:yarn:1156d87670"
     modImplementation "net.fabricmc:fabric-loader:0.12.12"
 
-    implementation('com.google.guava:guava:20.0.0-android')
+    implementation('com.google.guava:guava:31.0.1-jre')
 
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
     implementation 'com.github.KalleStruik:noise-sampler:1.20.0'
-    implementation('com.github.jellejurre:seed-checker:1.2.0-1.18.1'){transitive=false}
+    implementation('com.github.jellejurre:seed-checker:1.2.0-1.18.1') { transitive = false }
 }
 
 processResources {
@@ -61,18 +60,16 @@ jar {
 }
 
 shadowJar {
-    dependsOn build
     manifest {
         attributes(
             'Main-Class': 'fragrant.MainUI'
         )
     }
     mergeServiceFiles()
-    configurations = [project.configurations.compileClasspath]
 
     archiveBaseName.set("NoiseSamplerGUI")
     archiveClassifier.set("")
-    archiveVersion.set("1.2.0")
+    archiveVersion.set("1.3.0")
 }
 
 publishing {
@@ -81,13 +78,14 @@ publishing {
             artifactId = archivesBaseName
             version = version
             groupId = group
-            artifact(tasks["shadowJar"]){
+            artifact(tasks["shadowJar"]) {
                 classifier = ""
             }
         }
     }
 
     if (ENV.MAVEN_URL) {
+        println "Publishing to ${ENV.MAVEN_URL}"
         maven {
             url ENV.MAVEN_URL
             credentials {

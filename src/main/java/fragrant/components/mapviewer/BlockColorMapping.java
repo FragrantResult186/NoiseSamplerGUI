@@ -91,8 +91,9 @@ public class BlockColorMapping {
         // FIRE: 255, 0, 0 -> #FF0000
         BLOCK_COLORS.put("lava", "#FF0000");
         BLOCK_COLORS.put("tnt", "#FF0000");
-        //BLOCK_COLORS.put("fire", "#FF0000");
+        // BLOCK_COLORS.put("fire", "#FF0000");
         BLOCK_COLORS.put("redstone_block", "#FF0000");
+        BLOCK_COLORS.put("red_mushroom_block", "#FF0000");
 
         // ICE: 160, 160, 255 -> #A0A0FF
         BLOCK_COLORS.put("ice", "#A0A0FF");
@@ -104,33 +105,33 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("block_of_iron", "#A7A7A7");
         BLOCK_COLORS.put("iron_door", "#A7A7A7");
         BLOCK_COLORS.put("brewing_stand", "#A7A7A7");
-        //BLOCK_COLORS.put("heavy_weighted_pressure_plate", "#A7A7A7");
+        // BLOCK_COLORS.put("heavy_weighted_pressure_plate", "#A7A7A7");
         BLOCK_COLORS.put("iron_trapdoor", "#A7A7A7");
         BLOCK_COLORS.put("lantern", "#A7A7A7");
         BLOCK_COLORS.put("anvil", "#A7A7A7"); // Assuming all damage levels are same color
         BLOCK_COLORS.put("grindstone", "#A7A7A7");
-        //BLOCK_COLORS.put("soul_fire_lantern", "#A7A7A7");
+        // BLOCK_COLORS.put("soul_fire_lantern", "#A7A7A7");
         BLOCK_COLORS.put("lodestone", "#A7A7A7");
 
         // PLANT: 0, 124, 0 -> #007C00
-        //BLOCK_COLORS.put("sapling", "#007C00");
-        //BLOCK_COLORS.put("flowers", "#007C00"); // A general color for flowers
-        //BLOCK_COLORS.put("wheat", "#007C00");
+        // BLOCK_COLORS.put("sapling", "#007C00");
+        // BLOCK_COLORS.put("flowers", "#007C00"); // A general color for flowers
+        // BLOCK_COLORS.put("wheat", "#007C00");
         BLOCK_COLORS.put("sugar_cane", "#007C00");
         BLOCK_COLORS.put("pumpkin_stem", "#007C00");
         BLOCK_COLORS.put("melon_stem", "#007C00");
         BLOCK_COLORS.put("lily_pad", "#007C00");
         BLOCK_COLORS.put("cocoa", "#007C00");
-        //BLOCK_COLORS.put("carrots", "#007C00");
-        //BLOCK_COLORS.put("potatoes", "#007C00");
-        //BLOCK_COLORS.put("beetroots", "#007C00");
+        // BLOCK_COLORS.put("carrots", "#007C00");
+        // BLOCK_COLORS.put("potatoes", "#007C00");
+        // BLOCK_COLORS.put("beetroots", "#007C00");
         BLOCK_COLORS.put("sweet_berry_bush", "#007C00");
         BLOCK_COLORS.put("fern", "#007C00");
-        //BLOCK_COLORS.put("vine", "#007C00");
+        // BLOCK_COLORS.put("vine", "#007C00");
         BLOCK_COLORS.put("leaves", "#007C00"); // A general color for all leaf types
         BLOCK_COLORS.put("cactus", "#007C00");
         BLOCK_COLORS.put("bamboo", "#007C00");
-        //BLOCK_COLORS.put("cave_vines", "#007C00");
+        // BLOCK_COLORS.put("cave_vines", "#007C00");
         BLOCK_COLORS.put("spore_blossom", "#007C00");
         BLOCK_COLORS.put("azalea", "#007C00");
         BLOCK_COLORS.put("flowering_azalea", "#007C00");
@@ -139,12 +140,12 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("seagrass", "#007C00");
 
         // SNOW: 255, 255, 255 -> #FFFFFF
-        //BLOCK_COLORS.put("snow", "#FFFFFF");
+        // BLOCK_COLORS.put("snow", "#FFFFFF");
         BLOCK_COLORS.put("snow_block", "#FFFFFF");
         BLOCK_COLORS.put("white_bed_foot", "#FFFFFF");
         BLOCK_COLORS.put("white_wool", "#FFFFFF");
         BLOCK_COLORS.put("white_stained_glass", "#FFFFFF");
-        //BLOCK_COLORS.put("white_carpet", "#FFFFFF");
+        // BLOCK_COLORS.put("white_carpet", "#FFFFFF");
         BLOCK_COLORS.put("white_shulker_box", "#FFFFFF");
         BLOCK_COLORS.put("white_glazed_terracotta", "#FFFFFF");
         BLOCK_COLORS.put("white_concrete", "#FFFFFF");
@@ -302,7 +303,7 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("acacia_door", "#D87F33");
         BLOCK_COLORS.put("red_sand", "#D87F33");
         BLOCK_COLORS.put("orange_wool", "#D87F33");
-        //BLOCK_COLORS.put("orange_carpet", "#D87F33");
+        // BLOCK_COLORS.put("orange_carpet", "#D87F33");
         BLOCK_COLORS.put("orange_shulker_box", "#D87F33");
         BLOCK_COLORS.put("orange_bed", "#D87F33");
         BLOCK_COLORS.put("orange_stained_glass", "#D87F33");
@@ -323,7 +324,7 @@ public class BlockColorMapping {
 
         // COLOR_MAGENTA: 178, 76, 216 -> #B24CD8
         BLOCK_COLORS.put("magenta_wool", "#B24CD8");
-        //BLOCK_COLORS.put("magenta_carpet", "#B24CD8");
+        // BLOCK_COLORS.put("magenta_carpet", "#B24CD8");
         BLOCK_COLORS.put("magenta_shulker_box", "#B24CD8");
         BLOCK_COLORS.put("magenta_bed", "#B24CD8");
         BLOCK_COLORS.put("magenta_stained_glass", "#B24CD8");
@@ -332,6 +333,7 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("magenta_concrete_powder", "#B24CD8");
         BLOCK_COLORS.put("magenta_candle", "#B24CD8");
         BLOCK_COLORS.put("purpur_block", "#B24CD8");
+        BLOCK_COLORS.put("purpur_pillar", "#B24CD8");
         BLOCK_COLORS.put("purpur_slab", "#B24CD8");
         BLOCK_COLORS.put("purpur_stairs", "#B24CD8");
         BLOCK_COLORS.put("ender_chest", "#B24CD8");
@@ -339,7 +341,7 @@ public class BlockColorMapping {
         // COLOR_GRAY: 76, 76, 76 -> #4C4C4C
         BLOCK_COLORS.put("acacia_wood", "#4C4C4C");
         BLOCK_COLORS.put("gray_wool", "#4C4C4C");
-        //BLOCK_COLORS.put("gray_carpet", "#4C4C4C");
+        // BLOCK_COLORS.put("gray_carpet", "#4C4C4C");
         BLOCK_COLORS.put("gray_shulker_box", "#4C4C4C");
         BLOCK_COLORS.put("gray_bed", "#4C4C4C");
         BLOCK_COLORS.put("gray_stained_glass", "#4C4C4C");
@@ -347,7 +349,6 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("gray_concrete", "#4C4C4C");
         BLOCK_COLORS.put("gray_concrete_powder", "#4C4C4C");
         BLOCK_COLORS.put("gray_candle", "#4C4C4C");
-        BLOCK_COLORS.put("dead_coral_block", "#4C4C4C");
         BLOCK_COLORS.put("dead_coral", "#4C4C4C");
         BLOCK_COLORS.put("dead_coral_fan", "#4C4C4C");
         BLOCK_COLORS.put("tinted_glass", "#4C4C4C");
@@ -355,7 +356,7 @@ public class BlockColorMapping {
 
         // COLOR_LIGHT_GRAY: 153, 153, 153 -> #999999
         BLOCK_COLORS.put("light_gray_wool", "#999999");
-        //BLOCK_COLORS.put("light_gray_carpet", "#999999");
+        // BLOCK_COLORS.put("light_gray_carpet", "#999999");
         BLOCK_COLORS.put("light_gray_shulker_box", "#999999");
         BLOCK_COLORS.put("light_gray_bed", "#999999");
         BLOCK_COLORS.put("light_gray_stained_glass", "#999999");
@@ -370,7 +371,7 @@ public class BlockColorMapping {
 
         // COLOR_CYAN: 76, 127, 153 -> #4C7F99
         BLOCK_COLORS.put("cyan_wool", "#4C7F99");
-        //BLOCK_COLORS.put("cyan_carpet", "#4C7F99");
+        // BLOCK_COLORS.put("cyan_carpet", "#4C7F99");
         BLOCK_COLORS.put("cyan_shulker_box", "#4C7F99");
         BLOCK_COLORS.put("cyan_bed", "#4C7F99");
         BLOCK_COLORS.put("cyan_stained_glass", "#4C7F99");
@@ -381,12 +382,12 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("prismarine", "#4C7F99");
         BLOCK_COLORS.put("warped_roots", "#4C7F99");
         BLOCK_COLORS.put("warped_fungus", "#4C7F99");
-        //BLOCK_COLORS.put("twisting_vines", "#4C7F99");
+        // BLOCK_COLORS.put("twisting_vines", "#4C7F99");
         BLOCK_COLORS.put("sculk_sensor", "#4C7F99");
 
         // COLOR_PURPLE: 127, 63, 178 -> #7F3FB2
         BLOCK_COLORS.put("purple_wool", "#7F3FB2");
-        //BLOCK_COLORS.put("purple_carpet", "#7F3FB2");
+        // BLOCK_COLORS.put("purple_carpet", "#7F3FB2");
         BLOCK_COLORS.put("purple_shulker_box", "#7F3FB2");
         BLOCK_COLORS.put("purple_bed", "#7F3FB2");
         BLOCK_COLORS.put("purple_stained_glass", "#7F3FB2");
@@ -408,7 +409,7 @@ public class BlockColorMapping {
 
         // COLOR_BLUE: 51, 76, 178 -> #334CB2
         BLOCK_COLORS.put("blue_wool", "#334CB2");
-        //BLOCK_COLORS.put("blue_carpet", "#334CB2");
+        // BLOCK_COLORS.put("blue_carpet", "#334CB2");
         BLOCK_COLORS.put("blue_shulker_box", "#334CB2");
         BLOCK_COLORS.put("blue_bed", "#334CB2");
         BLOCK_COLORS.put("blue_stained_glass", "#334CB2");
@@ -436,7 +437,7 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("dark_oak_door", "#664C33");
         BLOCK_COLORS.put("spruce_log_side", "#664C33");
         BLOCK_COLORS.put("brown_wool", "#664C33");
-        //BLOCK_COLORS.put("brown_carpet", "#664C33");
+        // BLOCK_COLORS.put("brown_carpet", "#664C33");
         BLOCK_COLORS.put("brown_shulker_box", "#664C33");
         BLOCK_COLORS.put("brown_bed", "#664C33");
         BLOCK_COLORS.put("brown_stained_glass", "#664C33");
@@ -446,13 +447,13 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("brown_candle", "#664C33");
         BLOCK_COLORS.put("soul_sand", "#664C33");
         BLOCK_COLORS.put("command_block", "#664C33");
-        BLOCK_COLORS.put("brown_mushroom", "#664C33");
+        //BLOCK_COLORS.put("brown_mushroom", "#664C33");
         BLOCK_COLORS.put("soul_soil", "#664C33");
         BLOCK_COLORS.put("mud_brick_slab", "#664C33");
 
         // COLOR_BLACK: 25, 25, 25 -> #191919
         BLOCK_COLORS.put("black_wool", "#191919");
-        //BLOCK_COLORS.put("black_carpet", "#191919");
+        // BLOCK_COLORS.put("black_carpet", "#191919");
         BLOCK_COLORS.put("black_shulker_box", "#191919");
         BLOCK_COLORS.put("black_bed", "#191919");
         BLOCK_COLORS.put("black_stained_glass", "#191919");
@@ -463,11 +464,9 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("obsidian", "#191919");
         BLOCK_COLORS.put("end_portal", "#191919");
         BLOCK_COLORS.put("dragon_egg", "#191919");
-        BLOCK_COLORS.put("coal_block", "#191919");
         BLOCK_COLORS.put("end_gateway", "#191919");
         BLOCK_COLORS.put("basalt", "#191919");
         BLOCK_COLORS.put("polished_basalt", "#191919");
-        BLOCK_COLORS.put("smooth_basalt", "#191919");
         BLOCK_COLORS.put("netherite_block", "#191919");
         BLOCK_COLORS.put("ancient_debris", "#191919");
         BLOCK_COLORS.put("crying_obsidian", "#191919");
@@ -516,7 +515,7 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("oak_log_side", "#815631");
         BLOCK_COLORS.put("jungle_log_side", "#815631");
         BLOCK_COLORS.put("campfire", "#815631");
-        //BLOCK_COLORS.put("soul_campfire", "#815631");
+        // BLOCK_COLORS.put("soul_campfire", "#815631");
         BLOCK_COLORS.put("mangrove_log_side", "#815631");
         BLOCK_COLORS.put("mangrove_roots", "#815631");
         BLOCK_COLORS.put("muddy_mangrove_roots", "#815631");
@@ -526,16 +525,17 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("verdant_froglight", "#7FA796");
 
         // FLOWERS
-        //BLOCK_COLORS.put("dandelion", "#FFD700");
-        //BLOCK_COLORS.put("poppy", "#FF0000");
-        //BLOCK_COLORS.put("blue_orchid", "#00C4CC");
-        //BLOCK_COLORS.put("allium", "#AB5CC6");
-        //BLOCK_COLORS.put("azure_bluet", "#C3C3D1");
-        //BLOCK_COLORS.put("tulip", "#E77D5E");
-        //BLOCK_COLORS.put("oxeye_daisy", "#E9E9E9");
-        //BLOCK_COLORS.put("cornflower", "#6495ED");
-        //BLOCK_COLORS.put("lily_of_the_valley", "#F5F5F5");
-        //BLOCK_COLORS.put("torchflower", "#FFA500");
+        // BLOCK_COLORS.put("dandelion", "#FFD700");
+        // BLOCK_COLORS.put("poppy", "#FF0000");
+        // BLOCK_COLORS.put("blue_orchid", "#00C4CC");
+        // BLOCK_COLORS.put("allium", "#AB5CC6");
+        // BLOCK_COLORS.put("azure_bluet", "#C3C3D1");
+        // BLOCK_COLORS.put("tulip", "#E77D5E");
+        // BLOCK_COLORS.put("oxeye_daisy", "#E9E9E9");
+        // BLOCK_COLORS.put("cornflower", "#6495ED");
+        // BLOCK_COLORS.put("lily_of_the_valley", "#F5F5F5");
+        // BLOCK_COLORS.put("torchflower", "#FFA500");
+        // BLOCK_COLORS.put("peony", "#F573E0");
 
         // ADD_BLOCKS
         BLOCK_COLORS.put("netherrack", "#ac2020");
@@ -546,12 +546,43 @@ public class BlockColorMapping {
         BLOCK_COLORS.put("cracked_stone_bricks", "#757d76");
         BLOCK_COLORS.put("mossy_stone_bricks", "#596b59");
         BLOCK_COLORS.put("gold_block", "#e8e10c");
+        BLOCK_COLORS.put("moss_block", "#1C8939");
+        // BLOCK_COLORS.put("moss_carpet", "#1C8939");
+        BLOCK_COLORS.put("cave_vines_plant", "#218b27");
+        BLOCK_COLORS.put("dripstone_block", "#BA8E63");
+        BLOCK_COLORS.put("pointed_dripstone", "#BA8E63");
+        BLOCK_COLORS.put("brain_coral_block", "#E561D8");
+        BLOCK_COLORS.put("fire_coral_block", "#961E1E");
+        BLOCK_COLORS.put("horn_coral_block", "#E8E818");
+        BLOCK_COLORS.put("dead_tube_coral_block", "#4C4C4C");
+        BLOCK_COLORS.put("dead_brain_coral_block", "#4C4C4C");
+        BLOCK_COLORS.put("dead_bubble_coral_block", "#4C4C4C");
+        BLOCK_COLORS.put("dead_fire_coral_block", "#4C4C4C");
+        BLOCK_COLORS.put("dead_horn_coral_block", "#4C4C4C");
+        BLOCK_COLORS.put("warped_wart_block", "#518f8d");
+        BLOCK_COLORS.put("nether_wart_block", "#4f1515");
+        BLOCK_COLORS.put("warped_nylium", "#518f8d");
+        BLOCK_COLORS.put("nether_quartz_ore", "#f7ded7");
+        BLOCK_COLORS.put("warped_stem", "#3e2f4a");
+        BLOCK_COLORS.put("crimson_stem", "#471e38");
+        BLOCK_COLORS.put("shroomlight", "#eb7e4b");
+        BLOCK_COLORS.put("twisting_vines_plant", "#32ad9b");
+        BLOCK_COLORS.put("weeping_vines_plant", "#8a2a17");
+        BLOCK_COLORS.put("weeping_vines", "#8a2a17");
+        BLOCK_COLORS.put("crimson_nylium", "#961E1E");
+        //BLOCK_COLORS.put("red_mushroom", "#9c2525");
+        //BLOCK_COLORS.put("crimson_roots", "#662323");
+        //BLOCK_COLORS.put("crimson_fungus", "#662323");
+        BLOCK_COLORS.put("nether_bricks", "#2e211f");
+        BLOCK_COLORS.put("nether_brick_fence", "#3d2f2d");
+        BLOCK_COLORS.put("nether_brick_stairs", "#2e211f");
 
         // MISC
         BLOCK_COLORS.put("bedrock", "#3c3c3c");
-        //BLOCK_COLORS.put("grass", "#5fc979");
-        //BLOCK_COLORS.put("tall_grass", "#5fc979");
-        //BLOCK_COLORS.put("air", "#ffffff"); // Representing air as white (transparent in visualization)
+        // BLOCK_COLORS.put("grass", "#5fc979");
+        // BLOCK_COLORS.put("tall_grass", "#5fc979");
+        // BLOCK_COLORS.put("air", "#ffffff"); // Representing air as white (transparent
+        // in visualization)
         BLOCK_COLORS.put("default", "#ffffff"); // Default color for unknown blocks
     }
 

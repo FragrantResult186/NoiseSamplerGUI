@@ -1,6 +1,5 @@
 package fragrant.search;
 
-
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.FlowLayout;
@@ -32,46 +31,46 @@ public class NoiseSearchCondition extends JPanel {
     public NoiseType getNoiseType() {
         return (NoiseType) noiseTypeCombo.getSelectedItem();
     }
-    
+
     public int getMinX() {
         return (Integer) minXSpinner.getValue();
     }
-    
+
     public int getMaxX() {
         return (Integer) maxXSpinner.getValue();
     }
-    
+
     public int getMinY() {
         return (Integer) minYSpinner.getValue();
     }
-    
+
     public int getMaxY() {
         return (Integer) maxYSpinner.getValue();
     }
-    
+
     public int getMinZ() {
         return (Integer) minZSpinner.getValue();
     }
-    
+
     public int getMaxZ() {
         return (Integer) maxZSpinner.getValue();
     }
-    
+
     public double getThreshold() {
         return (Double) thresholdSpinner.getValue();
     }
-    
+
     public int getThresholdConditionIndex() {
         return thresholdConditionCombo.getSelectedIndex();
     }
-    
+
     public int getConditionTypeIndex() {
         return conditionTypeCombo.getSelectedIndex();
     }
-    
+
     public void setValues(NoiseType noiseType, int minX, int maxX, int minY, int maxY,
-                         int minZ, int maxZ, double threshold, 
-                         int thresholdConditionIndex, int conditionTypeIndex) {
+            int minZ, int maxZ, double threshold,
+            int thresholdConditionIndex, int conditionTypeIndex) {
         noiseTypeCombo.setSelectedItem(noiseType);
         minXSpinner.setValue(minX);
         maxXSpinner.setValue(maxX);
@@ -83,30 +82,30 @@ public class NoiseSearchCondition extends JPanel {
         thresholdConditionCombo.setSelectedIndex(thresholdConditionIndex);
         conditionTypeCombo.setSelectedIndex(conditionTypeIndex);
     }
-    
+
     public NoiseSearchCondition(NoiseSearchPanel parentPanel) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Noise Condition"));
 
         noiseTypeCombo = new JComboBox<>(NoiseType.values());
 
-        minXSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
-        maxXSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
-        minYSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
-        maxYSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
-        minZSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
-        maxZSpinner      = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minXSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxXSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minYSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxYSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        minZSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
+        maxZSpinner = new JSpinner(new SpinnerNumberModel(0, Integer.MIN_VALUE, Integer.MAX_VALUE, 1));
         thresholdSpinner = new JSpinner(new SpinnerNumberModel(0.00, -10.0, 10.0, 0.1));
 
-        thresholdConditionCombo = new JComboBox<>(new String[]{"Above threshold", "Below threshold"});
-        conditionTypeCombo = new JComboBox<>(new String[]{"All coordinates match", "Any coordinate matches"});
-        
+        thresholdConditionCombo = new JComboBox<>(new String[] { "Above threshold", "Below threshold" });
+        conditionTypeCombo = new JComboBox<>(new String[] { "All coordinates match", "Any coordinate matches" });
+
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton upButton = new JButton("↑");
         JButton downButton = new JButton("↓");
         JButton deleteButton = new JButton("Delete");
         upButton.addActionListener(e -> parentPanel.moveConditionUp(this));
-        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));    
+        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));
         deleteButton.addActionListener(e -> parentPanel.removeCondition(this));
 
         JPanel fieldsPanel = new JPanel();
@@ -129,7 +128,7 @@ public class NoiseSearchCondition extends JPanel {
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(deleteButton);
-    
+
         add(fieldsPanel);
         add(buttonPanel);
     }

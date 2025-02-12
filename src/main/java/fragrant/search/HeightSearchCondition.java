@@ -56,15 +56,15 @@ public class HeightSearchCondition extends JPanel {
         JButton upButton = new JButton("↑");
         JButton downButton = new JButton("↓");
         JButton deleteButton = new JButton("Delete");
-    
+
         upButton.addActionListener(e -> parentPanel.moveConditionUp(this));
-        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));    
+        downButton.addActionListener(e -> parentPanel.moveConditionDown(this));
         deleteButton.addActionListener(e -> parentPanel.removeHeightCondition(this));
 
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(deleteButton);
-        
+
         add(fieldsPanel);
         add(buttonPanel);
     }

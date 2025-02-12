@@ -13,16 +13,16 @@ public class AppSettings {
     public static int getFontSize() {
         return PREFS.getInt(FONT_SIZE, 12);
     }
-    
+
     public static void setFontSize(int size) {
         PREFS.putInt(FONT_SIZE, size);
         updateGlobalFontSize(size);
     }
-    
+
     public static String getTheme() {
         return PREFS.get(THEME, "light");
     }
-    
+
     public static void setTheme(String theme) {
         PREFS.put(THEME, theme);
     }
@@ -30,27 +30,27 @@ public class AppSettings {
     public static int getMaxSeeds() {
         return PREFS.getInt(MAX_SEEDS, 10000);
     }
-    
+
     public static void setMaxSeeds(int count) {
         PREFS.putInt(MAX_SEEDS, count);
     }
-    
+
     private static void updateGlobalFontSize(int size) {
         Font baseFont = new Font(Font.SANS_SERIF, Font.PLAIN, size);
         Font boldFont = baseFont.deriveFont(Font.BOLD);
-        
+
         UIDefaults defaults = UIManager.getLookAndFeelDefaults();
         defaults.put("defaultFont", baseFont);
-        
+
         String[] components = {
-            "Label", "TextField", "TextArea", "Button", 
-            "ComboBox", "CheckBox", "RadioButton"
+                "Label", "TextField", "TextArea", "Button",
+                "ComboBox", "CheckBox", "RadioButton"
         };
-        
+
         for (String component : components) {
             defaults.put(component + ".font", baseFont);
         }
-        
+
         defaults.put("TitledBorder.font", boldFont);
     }
 }

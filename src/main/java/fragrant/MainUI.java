@@ -11,8 +11,8 @@ import java.time.Instant;
 import java.awt.Font;
 
 import javax.swing.SwingUtilities;
-import javax.swing.JSplitPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JSplitPane;
 import javax.swing.UIManager;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -232,7 +232,7 @@ public class MainUI extends JFrame {
     public void updateMapViewer(long seed) {
         mapViewerPanel.updateSeed(seed);
     }
-    
+
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             String theme = AppSettings.getTheme();

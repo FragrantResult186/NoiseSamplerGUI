@@ -31,10 +31,9 @@ public class SeedMemory {
 
     @Override
     public String toString() {
-        return String.format("%d%s", 
-            seed, 
-            description
-        );
+        return String.format("%d%s",
+                seed,
+                description);
     }
 
     public static class LocalDateTimeSerializer implements JsonSerializer<LocalDateTime> {

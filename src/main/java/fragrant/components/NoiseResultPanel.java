@@ -41,17 +41,17 @@ public class NoiseResultPanel extends JPanel {
         setBorder(BorderFactory.createTitledBorder("Search Results"));
 
         SeedMemoryStorage.ensureStorageDirectory();
-        
+
         loadSavedMemories();
 
         JPanel inputPanel = new JPanel(new BorderLayout());
         descriptionField = new JTextField();
         inputPanel.add(new JLabel("Description: "), BorderLayout.WEST);
         inputPanel.add(descriptionField, BorderLayout.CENTER);
-        
+
         add(inputPanel, BorderLayout.NORTH);
         add(new JScrollPane(seedList), BorderLayout.CENTER);
-        
+
         popupMenu = createPopupMenu();
         setupMouseListener();
 
@@ -79,7 +79,7 @@ public class NoiseResultPanel extends JPanel {
                     showPopup(e);
                 }
             }
-            
+
             @Override
             public void mouseReleased(MouseEvent e) {
                 if (e.isPopupTrigger()) {
@@ -92,10 +92,10 @@ public class NoiseResultPanel extends JPanel {
     public void updatePopupMenuTheme(boolean isDark) {
         Color bgColor = isDark ? new Color(43, 43, 43) : new Color(240, 240, 240);
         Color fgColor = isDark ? new Color(200, 200, 200) : new Color(0, 0, 0);
-        
+
         popupMenu.setBackground(bgColor);
         popupMenu.setForeground(fgColor);
-        
+
         for (Component item : popupMenu.getComponents()) {
             if (item instanceof JMenuItem) {
                 JMenuItem menuItem = (JMenuItem) item;
@@ -120,29 +120,29 @@ public class NoiseResultPanel extends JPanel {
 
     private JPopupMenu createPopupMenu() {
         JPopupMenu menu = new JPopupMenu();
-        
+
         JMenuItem copySelected = new JMenuItem("Copy Selected");
         copySelected.addActionListener(e -> copySelectedSeeds());
-        
+
         JMenuItem copyAll = new JMenuItem("Copy All");
         copyAll.addActionListener(e -> copyAllSeeds());
-        
+
         JMenuItem editDesc = new JMenuItem("Edit Description");
         editDesc.addActionListener(e -> editDescription());
-        
+
         JMenuItem deleteSelected = new JMenuItem("Delete Selected");
         deleteSelected.addActionListener(e -> deleteSelectedSeeds());
-        
+
         JMenuItem clearAll = new JMenuItem("Clear All");
         clearAll.addActionListener(e -> seedListModel.clear());
-        
+
         menu.add(copySelected);
         menu.add(copyAll);
         menu.addSeparator();
         menu.add(editDesc);
         menu.add(deleteSelected);
         menu.add(clearAll);
-        
+
         return menu;
     }
 
@@ -159,37 +159,36 @@ public class NoiseResultPanel extends JPanel {
     private void copySelectedSeeds() {
         List<SeedMemory> selectedMemories = seedList.getSelectedValuesList();
         String text = selectedMemories.stream()
-            .map(SeedMemory::toString)
-            .collect(Collectors.joining("\n"));
+                .map(SeedMemory::toString)
+                .collect(Collectors.joining("\n"));
         StringSelection selection = new StringSelection(text);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
     }
 
     private void copyAllSeeds() {
         String text = IntStream.range(0, seedListModel.size())
-            .mapToObj(seedListModel::get)
-            .map(SeedMemory::toString)
-            .collect(Collectors.joining("\n"));
+                .mapToObj(seedListModel::get)
+                .map(SeedMemory::toString)
+                .collect(Collectors.joining("\n"));
         StringSelection selection = new StringSelection(text);
         Toolkit.getDefaultToolkit().getSystemClipboard().setContents(selection, null);
     }
 
     private void editDescription() {
         int selectedIndex = seedList.getSelectedIndex();
-        if (selectedIndex == -1) return;
-        
+        if (selectedIndex == -1)
+            return;
+
         SeedMemory memory = seedListModel.getElementAt(selectedIndex);
         String newDescription = JOptionPane.showInputDialog(
-            this,
-            "Enter new description:",
-            memory.getDescription()
-        );
-        
+                this,
+                "Enter new description:",
+                memory.getDescription());
+
         if (newDescription != null) {
             seedListModel.setElementAt(
-                new SeedMemory(memory.getSeed(), newDescription),
-                selectedIndex
-            );
+                    new SeedMemory(memory.getSeed(), newDescription),
+                    selectedIndex);
             saveMemories();
         }
     }
@@ -220,34 +219,34 @@ public class NoiseResultPanel extends JPanel {
     private void startResultProcessor() {
         Thread processor = new Thread(() -> {
             List<SeedMemory> currentBatch = new ArrayList<>();
-            
+
             while (true) {
                 try {
                     if (!isProcessing) {
                         Thread.sleep(100);
                         continue;
                     }
-                    
+
                     SeedMemory seed = resultQueue.poll(100, TimeUnit.MILLISECONDS);
                     if (seed != null) {
                         currentBatch.add(seed);
-                        
-                        if (currentBatch.size() >= MAX_BATCH_SIZE || 
-                            (currentBatch.size() > 0 && resultQueue.isEmpty())) {
-                            
+
+                        if (currentBatch.size() >= MAX_BATCH_SIZE ||
+                                (currentBatch.size() > 0 && resultQueue.isEmpty())) {
+
                             final List<SeedMemory> batchToAdd = new ArrayList<>(currentBatch);
                             SwingUtilities.invokeLater(() -> {
                                 if (seedListModel.size() < getMaxResults()) {
                                     for (SeedMemory mem : batchToAdd) {
                                         seedListModel.addElement(mem);
                                     }
-                                    
+
                                     long currentTime = System.currentTimeMillis();
                                     if (currentTime - lastSaveTime > SAVE_INTERVAL) {
                                         saveMemories();
                                         lastSaveTime = currentTime;
                                     }
-                                    
+
                                     if (seedListModel.size() >= getMaxResults()) {
                                         stopProcessing();
                                     }
@@ -265,15 +264,15 @@ public class NoiseResultPanel extends JPanel {
         processor.setDaemon(true);
         processor.start();
     }
-    
+
     private int getMaxResults() {
         return AppSettings.getMaxSeeds();
     }
-    
+
     public void startProcessing() {
         isProcessing = true;
     }
-    
+
     public void stopProcessing() {
         isProcessing = false;
         saveMemories();
@@ -281,9 +280,9 @@ public class NoiseResultPanel extends JPanel {
         if (seedListModel.size() >= getMaxResults()) {
             SwingUtilities.invokeLater(() -> {
                 JOptionPane.showMessageDialog(this,
-                    "Maximum result count (" + getMaxResults() + ") reached. Search stopped.",
-                    "Search Limit",
-                    JOptionPane.WARNING_MESSAGE);
+                        "Maximum result count (" + getMaxResults() + ") reached. Search stopped.",
+                        "Search Limit",
+                        JOptionPane.WARNING_MESSAGE);
             });
         }
     }
@@ -292,7 +291,7 @@ public class NoiseResultPanel extends JPanel {
         if (seedListModel.size() >= getMaxResults()) {
             return;
         }
-        
+
         String description = descriptionField.getText().trim();
         try {
             resultQueue.offer(new SeedMemory(seed, description), 50, TimeUnit.MILLISECONDS);

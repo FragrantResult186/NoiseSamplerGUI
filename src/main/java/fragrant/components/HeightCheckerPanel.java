@@ -91,7 +91,7 @@ public class HeightCheckerPanel extends JPanel {
             int surfaceY = -64;
             boolean foundSurface = false;
 
-            for (int y = 319; y >= -64; y--) {
+            for (int y = 256; y >= -64; y--) {
                 if (!currentChecker.getBlockState(x, y, z).isAir()) {
                     surfaceY = y;
                     foundSurface = true;

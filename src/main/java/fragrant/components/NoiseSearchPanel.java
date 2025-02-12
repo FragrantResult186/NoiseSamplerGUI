@@ -120,8 +120,7 @@ public class NoiseSearchPanel extends JPanel {
                         conditionData.minZ, conditionData.maxZ,
                         conditionData.threshold,
                         conditionData.thresholdConditionIndex,
-                        conditionData.conditionTypeIndex
-                );
+                        conditionData.conditionTypeIndex);
                 searchConditions.add(condition);
                 conditionsPanel.add(condition);
             }
@@ -139,7 +138,7 @@ public class NoiseSearchPanel extends JPanel {
                     conditionsPanel.add(condition);
                 }
             }
-            
+
             updateConditionsPanelSize();
             conditionsPanel.revalidate();
             conditionsPanel.repaint();
@@ -149,22 +148,22 @@ public class NoiseSearchPanel extends JPanel {
     private JPanel createRibbonPanel() {
         JPanel ribbonPanel = new JPanel();
         ribbonPanel.setLayout(new BoxLayout(ribbonPanel, BoxLayout.Y_AXIS));
-        
+
         JPanel tabsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         tabsPanel.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, Color.GRAY));
-        
+
         JButton fileTab = createTabButton("Search Settings");
         JButton settingsTab = createTabButton("Advanced Settings");
-        
+
         tabsPanel.add(fileTab);
         tabsPanel.add(settingsTab);
-        
+
         contentCardLayout = new CardLayout();
         contentPanel = new JPanel(contentCardLayout);
         contentPanel.setPreferredSize(new Dimension(0, 150));
         contentPanel.add(createSearchSettingsPanel(), "search");
         contentPanel.add(createAdvancedSettingsPanel(), "advanced");
-        
+
         fileTab.addActionListener(e -> {
             contentCardLayout.show(contentPanel, "search");
             updateTabSelection(fileTab, settingsTab);
@@ -173,14 +172,14 @@ public class NoiseSearchPanel extends JPanel {
             contentCardLayout.show(contentPanel, "advanced");
             updateTabSelection(settingsTab, fileTab);
         });
-        
+
         fileTab.doClick();
-        
+
         ribbonPanel.add(tabsPanel);
         ribbonPanel.add(contentPanel);
-        
+
         return ribbonPanel;
-    }    
+    }
 
     private JButton createTabButton(String text) {
         JButton button = new JButton(text);
@@ -195,9 +194,9 @@ public class NoiseSearchPanel extends JPanel {
     private void updateTabSelection(JButton selectedTab, JButton... otherTabs) {
         selectedTab.setFont(selectedTab.getFont().deriveFont(Font.BOLD));
         selectedTab.setBorderPainted(true);
-        selectedTab.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, 
-            UIManager.getColor("Component.focusColor")));
-        
+        selectedTab.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0,
+                UIManager.getColor("Component.focusColor")));
+
         for (JButton tab : otherTabs) {
             tab.setBorderPainted(false);
             tab.setFont(tab.getFont().deriveFont(Font.PLAIN));
@@ -209,13 +208,13 @@ public class NoiseSearchPanel extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panel.setPreferredSize(new Dimension(0, 150));
-        
+
         JPanel searchModePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         seedRangeCombo = new JComboBox<>(new String[] {
-            "Full Range", "Fixed Lower 32 bits", 
-            "Fixed Lower 48 bits", "Seeds from File"
+                "Full Range", "Fixed Lower 32 bits",
+                "Fixed Lower 48 bits", "Seeds from File"
         });
-        
+
         seedRangeCombo.addActionListener(e -> {
             int selectedIndex = seedRangeCombo.getSelectedIndex();
             boolean isFullRange = selectedIndex == 0;
@@ -224,85 +223,83 @@ public class NoiseSearchPanel extends JPanel {
             seedFileField.setEnabled(isFileMode);
             browseSeedFileButton.setEnabled(isFileMode);
         });
-        
+
         searchModePanel.add(new JLabel("Search Mode:"));
         searchModePanel.add(seedRangeCombo);
-        
+
         JPanel fixedBitsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         fixedBitsField = new JTextField("0", 20);
         fixedBitsPanel.add(new JLabel("Fixed Bits:"));
         fixedBitsPanel.add(fixedBitsField);
-        
+
         JPanel seedFilePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         seedFileField = new JTextField(20);
         browseSeedFileButton = new JButton("Browse...");
         browseSeedFileButton.addActionListener(e -> browseForSeedFile());
-        
+
         seedFilePanel.add(new JLabel("Seed File:"));
         seedFilePanel.add(seedFileField);
         seedFilePanel.add(browseSeedFileButton);
-        
+
         panel.add(searchModePanel);
         panel.add(fixedBitsPanel);
         panel.add(seedFilePanel);
-        
+
         return panel;
     }
-    
+
     private JPanel createAdvancedSettingsPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         panel.setPreferredSize(new Dimension(0, 150));
-        
+
         JPanel startSeedPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         startSeedField = new JTextField("0", 20);
         startSeedPanel.add(new JLabel("Start Seed:"));
         startSeedPanel.add(startSeedField);
-        
+
         JPanel threadPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         threadCountSpinner = new JSpinner(new SpinnerNumberModel(
-            MAX_THREADS / 2, 1, MAX_THREADS, 1
-        ));
+                MAX_THREADS / 2, 1, MAX_THREADS, 1));
         threadPanel.add(new JLabel("Threads:"));
         threadPanel.add(threadCountSpinner);
-        
+
         JPanel storagePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JButton saveButton = new JButton("Save Settings");
         JButton loadButton = new JButton("Load Settings");
-        
+
         saveButton.addActionListener(e -> saveCurrentSettings());
         loadButton.addActionListener(e -> loadSavedSettings());
-        
+
         storagePanel.add(saveButton);
         storagePanel.add(loadButton);
-        
+
         panel.add(startSeedPanel);
         panel.add(threadPanel);
         panel.add(storagePanel);
-        
+
         return panel;
     }
-    
+
     private JScrollPane createConditionsPanel() {
         conditionsPanel = new JPanel();
         conditionsPanel.setLayout(new BoxLayout(conditionsPanel, BoxLayout.Y_AXIS));
-        
+
         JScrollPane scrollPane = new JScrollPane(conditionsPanel);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.setBorder(BorderFactory.createTitledBorder("Search Conditions"));
-        
+
         return scrollPane;
     }
 
     private JPanel createActionPanel() {
         JPanel panel = new JPanel();
         panel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY),
-            BorderFactory.createEmptyBorder(5, 5, 5, 5)
-        ));
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Color.GRAY),
+                BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
-        
+
         JButton addConditionButton = new JButton("Add Noise Condition");
         JButton clearResultsButton = new JButton("Clear Results");
         JButton addHeightConditionButton = new JButton("Add Height Condition");
@@ -361,8 +358,7 @@ public class NoiseSearchPanel extends JPanel {
                         conditionData.minZ, conditionData.maxZ,
                         conditionData.threshold,
                         conditionData.thresholdConditionIndex,
-                        conditionData.conditionTypeIndex
-                );
+                        conditionData.conditionTypeIndex);
                 searchConditions.add(condition);
                 conditionsPanel.add(condition);
             }
@@ -399,26 +395,28 @@ public class NoiseSearchPanel extends JPanel {
                 }
             }
             JOptionPane.showMessageDialog(this,
-                String.format("Loaded %d seeds from file", seedsFromFile.size()),
-                "Load Complete",
-                JOptionPane.INFORMATION_MESSAGE);
+                    String.format("Loaded %d seeds from file", seedsFromFile.size()),
+                    "Load Complete",
+                    JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this,
-                "Failed to load seeds from file: " + e.getMessage(),
-                "Load Error",
-                JOptionPane.ERROR_MESSAGE);
+                    "Failed to load seeds from file: " + e.getMessage(),
+                    "Load Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void startSearch() {
         mainWindow.getResultPanel().startProcessing();
-        /* if (searchConditions.isEmpty()) {
-        JOptionPane.showMessageDialog(this,
-                "Please add at least one noise condition.",
-                "No Conditions",
-                JOptionPane.WARNING_MESSAGE);
-        return;
-        } */
+        /*
+         * if (searchConditions.isEmpty()) {
+         * JOptionPane.showMessageDialog(this,
+         * "Please add at least one noise condition.",
+         * "No Conditions",
+         * JOptionPane.WARNING_MESSAGE);
+         * return;
+         * }
+         */
 
         if (searchConditions.isEmpty() && heightConditions.isEmpty()) {
             JOptionPane.showMessageDialog(this,
@@ -427,10 +425,10 @@ public class NoiseSearchPanel extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
             return;
         }
-    
+
         try {
             final int searchMode = seedRangeCombo.getSelectedIndex();
-    
+
             if (searchMode == 3 && seedsFromFile.isEmpty()) {
                 JOptionPane.showMessageDialog(this,
                         "Please load a seed file first.",
@@ -438,7 +436,7 @@ public class NoiseSearchPanel extends JPanel {
                         JOptionPane.WARNING_MESSAGE);
                 return;
             }
-    
+
             String startSeedText = startSeedField.getText();
             if (!startSeedText.matches("-?\\d+")) {
                 JOptionPane.showMessageDialog(this,
@@ -447,13 +445,13 @@ public class NoiseSearchPanel extends JPanel {
                         JOptionPane.ERROR_MESSAGE);
                 return;
             }
-    
+
             final long startSeed = Long.parseLong(startSeedText);
-    
+
             String fixedBitsText = fixedBitsField.getText();
             final long fixedBits;
             if (searchMode != 0) {
-                if (fixedBitsText.isEmpty() || !fixedBitsText.matches("-?\\d+")) { 
+                if (fixedBitsText.isEmpty() || !fixedBitsText.matches("-?\\d+")) {
                     JOptionPane.showMessageDialog(this,
                             "Please enter a valid number for the fixed bits.",
                             "Input Error",
@@ -464,13 +462,13 @@ public class NoiseSearchPanel extends JPanel {
             } else {
                 fixedBits = 0;
             }
-    
+
             System.out.println("Fixed Bits: " + fixedBits);
-    
+
             final long mask;
             final long fixedBitsMask;
             final long stepSize;
-    
+
             switch (searchMode) {
                 case 1:
                     mask = 0xFFFFFFFF00000000L;
@@ -487,31 +485,31 @@ public class NoiseSearchPanel extends JPanel {
                     fixedBitsMask = 0L;
                     stepSize = 1;
             }
-    
+
             isSearching = true;
             startSearchButton.setEnabled(false);
             stopSearchButton.setEnabled(true);
             threadCountSpinner.setEnabled(false);
             mainWindow.startSearch();
-    
+
             int threadCount = (Integer) threadCountSpinner.getValue();
             executorService = Executors.newFixedThreadPool(threadCount);
             searchTasks.clear();
-    
+
             if (searchMode == 3) {
                 int seedsPerThread = seedsFromFile.size() / threadCount;
                 int remainingSeeds = seedsFromFile.size() % threadCount;
-    
+
                 for (int i = 0; i < threadCount; i++) {
                     final int startIndex = i * seedsPerThread + Math.min(i, remainingSeeds);
                     final int endIndex = (i + 1) * seedsPerThread + Math.min(i + 1, remainingSeeds);
-    
+
                     Future<?> task = executorService.submit(() -> {
-                        for (int j = startIndex; j < endIndex && !Thread.currentThread().isInterrupted() && isSearching; j++) {
+                        for (int j = startIndex; j < endIndex && !Thread.currentThread().isInterrupted()
+                                && isSearching; j++) {
                             long seed = seedsFromFile.get(j);
                             if (checkSeed(seed)) {
-                                SwingUtilities.invokeLater(() ->
-                                        mainWindow.getResultPanel().addSeed(seed));
+                                SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(seed));
                             }
                             lastProcessedSeed = seed;
                             mainWindow.incrementProcessedSeeds();
@@ -527,26 +525,26 @@ public class NoiseSearchPanel extends JPanel {
                         if (searchMode != 0) {
                             initialSeed |= (fixedBits & fixedBitsMask);
                         }
-    
+
                         long seed = initialSeed;
-    
+
                         while (!Thread.currentThread().isInterrupted() && isSearching) {
                             if (checkSeed(seed)) {
                                 final long foundSeed = seed;
                                 SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(foundSeed));
                             }
                             lastProcessedSeed = seed;
-    
+
                             seed = ((seed + (threadCount * stepSize)) & mask) |
                                     (fixedBits & fixedBitsMask);
-    
+
                             mainWindow.incrementProcessedSeeds();
                         }
                     });
                     searchTasks.add(task);
                 }
             }
-    
+
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this,
                     "Please enter valid numbers for the seeds.",
@@ -559,7 +557,7 @@ public class NoiseSearchPanel extends JPanel {
             return;
         }
     }
-    
+
     private void stopSearch() {
         isSearching = false;
         if (executorService != null) {
@@ -597,18 +595,18 @@ public class NoiseSearchPanel extends JPanel {
         if (!searchConditions.stream().allMatch(condition -> condition.checkCondition(sampler))) {
             return false;
         }
-        
+
         if (!heightConditions.isEmpty()) {
             SeedChecker checker = new SeedChecker(seed);
             if (!heightConditions.stream().allMatch(condition -> condition.checkCondition(checker))) {
                 return false;
             }
         }
-    
+
         SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(seed));
         return false;
     }
-    
+
     public void removeCondition(NoiseSearchCondition condition) {
         searchConditions.remove(condition);
         conditionsPanel.remove(condition);
@@ -634,11 +632,11 @@ public class NoiseSearchPanel extends JPanel {
                 break;
             }
         }
-    
+
         if (index > 0) {
             conditionsPanel.remove(index);
-            conditionsPanel.add((java.awt.Component)condition, index - 1);
-    
+            conditionsPanel.add((java.awt.Component) condition, index - 1);
+
             if (condition instanceof NoiseSearchCondition) {
                 int noiseIndex = searchConditions.indexOf(condition);
                 if (noiseIndex > 0) {
@@ -650,12 +648,12 @@ public class NoiseSearchPanel extends JPanel {
                     Collections.swap(heightConditions, heightIndex, heightIndex - 1);
                 }
             }
-    
+
             conditionsPanel.revalidate();
             conditionsPanel.repaint();
         }
     }
-    
+
     public void moveConditionDown(Object condition) {
         int index = -1;
         for (int i = 0; i < conditionsPanel.getComponentCount(); i++) {
@@ -664,11 +662,11 @@ public class NoiseSearchPanel extends JPanel {
                 break;
             }
         }
-        
+
         if (index < conditionsPanel.getComponentCount() - 1) {
             conditionsPanel.remove(index);
-            conditionsPanel.add((java.awt.Component)condition, index + 1);
-            
+            conditionsPanel.add((java.awt.Component) condition, index + 1);
+
             if (condition instanceof NoiseSearchCondition) {
                 int noiseIndex = searchConditions.indexOf(condition);
                 if (noiseIndex < searchConditions.size() - 1) {
@@ -680,7 +678,7 @@ public class NoiseSearchPanel extends JPanel {
                     Collections.swap(heightConditions, heightIndex, heightIndex + 1);
                 }
             }
-            
+
             conditionsPanel.revalidate();
             conditionsPanel.repaint();
         }
