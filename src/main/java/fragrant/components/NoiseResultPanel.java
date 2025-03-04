@@ -11,13 +11,13 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.awt.*;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 public class NoiseResultPanel extends JPanel {
     private final DefaultListModel<SeedMemory> seedListModel;
@@ -27,21 +27,23 @@ public class NoiseResultPanel extends JPanel {
     private final BlockingQueue<SeedMemory> resultQueue;
     private volatile boolean isProcessing = false;
     private static final int SAVE_INTERVAL = 5000;
+    private static final int UPDATE_INTERVAL = 100;
     private long lastSaveTime = 0;
+    private long lastUpdateTime = 0;
     private static final int MAX_BATCH_SIZE = 100;
+    private final List<SeedMemory> pendingSeeds;
 
     public NoiseResultPanel() {
         seedListModel = new DefaultListModel<>();
         resultQueue = new LinkedBlockingQueue<>(1000);
-        startResultProcessor();
-
+        pendingSeeds = new ArrayList<>();
+        
         setLayout(new BorderLayout());
         seedList = new JList<>(seedListModel);
         seedList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         setBorder(BorderFactory.createTitledBorder("Search Results"));
 
         SeedMemoryStorage.ensureStorageDirectory();
-
         loadSavedMemories();
 
         JPanel inputPanel = new JPanel(new BorderLayout());
@@ -56,6 +58,7 @@ public class NoiseResultPanel extends JPanel {
         setupMouseListener();
 
         Runtime.getRuntime().addShutdownHook(new Thread(this::saveMemories));
+        startResultProcessor();
     }
 
     private void loadSavedMemories() {
@@ -97,8 +100,7 @@ public class NoiseResultPanel extends JPanel {
         popupMenu.setForeground(fgColor);
 
         for (Component item : popupMenu.getComponents()) {
-            if (item instanceof JMenuItem) {
-                JMenuItem menuItem = (JMenuItem) item;
+            if (item instanceof JMenuItem menuItem) {
                 menuItem.setBackground(bgColor);
                 menuItem.setForeground(fgColor);
                 menuItem.setUI(new BasicMenuItemUI() {
@@ -201,25 +203,12 @@ public class NoiseResultPanel extends JPanel {
         saveMemories();
     }
 
-    public void setHeightCheckerPanel(HeightCheckerPanel heightCheckerPanel) {
-        seedList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                SeedMemory selected = seedList.getSelectedValue();
-                if (selected != null) {
-                    heightCheckerPanel.setSeed(selected.getSeed());
-                }
-            }
-        });
-    }
-
     public DefaultListModel<SeedMemory> getSeedListModel() {
         return seedListModel;
     }
 
     private void startResultProcessor() {
         Thread processor = new Thread(() -> {
-            List<SeedMemory> currentBatch = new ArrayList<>();
-
             while (true) {
                 try {
                     if (!isProcessing) {
@@ -229,31 +218,34 @@ public class NoiseResultPanel extends JPanel {
 
                     SeedMemory seed = resultQueue.poll(100, TimeUnit.MILLISECONDS);
                     if (seed != null) {
-                        currentBatch.add(seed);
+                        pendingSeeds.add(seed);
+                    }
 
-                        if (currentBatch.size() >= MAX_BATCH_SIZE ||
-                                (currentBatch.size() > 0 && resultQueue.isEmpty())) {
+                    long currentTime = System.currentTimeMillis();
+                    boolean shouldUpdate = currentTime - lastUpdateTime >= UPDATE_INTERVAL;
+                    boolean isBatchFull = pendingSeeds.size() >= MAX_BATCH_SIZE;
+                    boolean hasWaitingSeeds = !pendingSeeds.isEmpty() && resultQueue.isEmpty();
 
-                            final List<SeedMemory> batchToAdd = new ArrayList<>(currentBatch);
-                            SwingUtilities.invokeLater(() -> {
-                                if (seedListModel.size() < getMaxResults()) {
-                                    for (SeedMemory mem : batchToAdd) {
-                                        seedListModel.addElement(mem);
-                                    }
-
-                                    long currentTime = System.currentTimeMillis();
-                                    if (currentTime - lastSaveTime > SAVE_INTERVAL) {
-                                        saveMemories();
-                                        lastSaveTime = currentTime;
-                                    }
-
-                                    if (seedListModel.size() >= getMaxResults()) {
-                                        stopProcessing();
-                                    }
+                    if (shouldUpdate && (isBatchFull || hasWaitingSeeds)) {
+                        final List<SeedMemory> batchToAdd = new ArrayList<>(pendingSeeds);
+                        SwingUtilities.invokeLater(() -> {
+                            if (seedListModel.size() < getMaxResults()) {
+                                for (SeedMemory mem : batchToAdd) {
+                                    seedListModel.addElement(mem);
                                 }
-                            });
-                            currentBatch.clear();
-                        }
+
+                                if (currentTime - lastSaveTime > SAVE_INTERVAL) {
+                                    saveMemories();
+                                    lastSaveTime = currentTime;
+                                }
+
+                                if (seedListModel.size() >= getMaxResults()) {
+                                    stopProcessing();
+                                }
+                            }
+                        });
+                        pendingSeeds.clear();
+                        lastUpdateTime = currentTime;
                     }
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
@@ -276,15 +268,6 @@ public class NoiseResultPanel extends JPanel {
     public void stopProcessing() {
         isProcessing = false;
         saveMemories();
-
-        if (seedListModel.size() >= getMaxResults()) {
-            SwingUtilities.invokeLater(() -> {
-                JOptionPane.showMessageDialog(this,
-                        "Maximum result count (" + getMaxResults() + ") reached. Search stopped.",
-                        "Search Limit",
-                        JOptionPane.WARNING_MESSAGE);
-            });
-        }
     }
 
     public void addSeed(long seed) {

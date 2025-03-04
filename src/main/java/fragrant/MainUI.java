@@ -7,7 +7,9 @@ import java.awt.FlowLayout;
 import java.time.Duration;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.time.Instant;
+import java.awt.Color;
 import java.awt.Font;
 
 import javax.swing.SwingUtilities;
@@ -23,21 +25,18 @@ import javax.swing.Timer;
 import com.formdev.flatlaf.FlatLightLaf;
 import com.formdev.flatlaf.FlatDarkLaf;
 
-import fragrant.components.mapviewer.MapViewerPanel;
-import fragrant.components.HeightCheckerPanel;
+import fragrant.components.mapviewer.core.MapViewerPanel;
 import fragrant.memory.SearchConditionStorage;
 import fragrant.components.NoiseResultPanel;
-import fragrant.components.NoiseSearchPanel;
+import fragrant.components.SearchPanel;
 import fragrant.settings.SettingsDialog;
 import fragrant.settings.AppSettings;
 
 public class MainUI extends JFrame {
     private final Timer statusUpdateTimer;
 
-    private final NoiseSearchPanel searchPanel;
+    private final SearchPanel searchPanel;
     private final NoiseResultPanel resultPanel;
-    private HeightCheckerPanel heightCheckerPanel;
-    private final MapViewerPanel mapViewerPanel;
 
     private final JPanel statusPanel;
     private JLabel seedCountLabel;
@@ -52,31 +51,33 @@ public class MainUI extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        searchPanel = new NoiseSearchPanel(this);
+        searchPanel = new SearchPanel(this);
         resultPanel = new NoiseResultPanel();
-        heightCheckerPanel = new HeightCheckerPanel();
         statusPanel = createStatusPanel();
-
-        resultPanel.setHeightCheckerPanel(heightCheckerPanel);
-
-        JSplitPane rightSplitPane = new JSplitPane(
-                JSplitPane.VERTICAL_SPLIT,
-                resultPanel,
-                heightCheckerPanel);
-        rightSplitPane.setResizeWeight(0.7);
-
-        mapViewerPanel = new MapViewerPanel();
+        MapViewerPanel mapViewerPanel = new MapViewerPanel();
 
         JTabbedPane rightTabbedPane = new JTabbedPane();
+        rightTabbedPane.setOpaque(true);
+
         rightTabbedPane.addTab("Results", resultPanel);
-        rightTabbedPane.addTab("Height Checker", heightCheckerPanel);
         rightTabbedPane.addTab("Map Viewer", mapViewerPanel);
 
         JSplitPane mainSplitPane = new JSplitPane(
                 JSplitPane.HORIZONTAL_SPLIT,
                 searchPanel,
                 rightTabbedPane);
+        mainSplitPane.setOpaque(true);
         mainSplitPane.setResizeWeight(0.5);
+        mainSplitPane.setContinuousLayout(true);
+        mainSplitPane.setOneTouchExpandable(true);
+        mainSplitPane.setDividerSize(8);
+
+        UIManager.put("SplitPane.oneTouchButtonSize", 8);
+        UIManager.put("SplitPane.oneTouchButtonOffset", 3);
+        UIManager.put("SplitPane.centerOneTouchButtons", true);
+
+        searchPanel.setMinimumSize(new Dimension(100, 0));
+        rightTabbedPane.setMinimumSize(new Dimension(100, 0));
 
         JPanel topPanel = new JPanel(new BorderLayout());
         JButton settingsButton = new JButton("Settings");
@@ -108,6 +109,7 @@ public class MainUI extends JFrame {
                         searchPanel,
                         searchPanel.getSearchConditions(),
                         searchPanel.getHeightConditions(),
+                        searchPanel.getBiomeConditions(),
                         startSeed);
             }
         });
@@ -151,9 +153,40 @@ public class MainUI extends JFrame {
     private void applyTheme(boolean isDark) {
         try {
             UIManager.setLookAndFeel(isDark ? new FlatDarkLaf() : new FlatLightLaf());
+            
+            Color splitPaneBackground = isDark ? new Color(60, 63, 65) : new Color(230, 230, 230);
+            Color dividerDraggingColor = isDark ? new Color(88, 91, 93) : new Color(180, 180, 180);
+            Color tabBackground = isDark ? new Color(43, 43, 43) : new Color(242, 242, 242);
+            
+            UIManager.put("SplitPane.background", splitPaneBackground);
+            UIManager.put("SplitPaneDivider.draggingColor", dividerDraggingColor);
+            UIManager.put("TabbedPane.background", tabBackground);
+            UIManager.put("TabbedPane.selectedBackground", tabBackground);
+            UIManager.put("TabbedPane.unselectedBackground", tabBackground);
+            UIManager.put("TabbedPane.contentAreaColor", tabBackground);
+            
             resultPanel.updatePopupMenuTheme(isDark);
+            
+            SwingUtilities.invokeLater(() -> updateComponentColors(this, isDark));
+            
         } catch (Exception ex) {
             ex.printStackTrace();
+        }
+    }
+    
+    private void updateComponentColors(Container container, boolean isDark) {
+        Color background = isDark ? new Color(60, 63, 65) : new Color(230, 230, 230);
+        
+        for (Component comp : container.getComponents()) {
+            if (comp instanceof JSplitPane) {
+                comp.setBackground(background);
+            }
+            if (comp instanceof JTabbedPane) {
+                comp.setBackground(isDark ? new Color(43, 43, 43) : new Color(242, 242, 242));
+            }
+            if (comp instanceof Container) {
+                updateComponentColors((Container) comp, isDark);
+            }
         }
     }
 
@@ -227,10 +260,6 @@ public class MainUI extends JFrame {
 
     public NoiseResultPanel getResultPanel() {
         return resultPanel;
-    }
-
-    public void updateMapViewer(long seed) {
-        mapViewerPanel.updateSeed(seed);
     }
 
     public static void main(String[] args) {

@@ -16,7 +16,7 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import fragrant.components.NoiseSearchPanel;
+import fragrant.components.SearchPanel;
 
 import nl.kallestruik.noisesampler.NoiseSampler;
 import nl.kallestruik.noisesampler.NoiseType;
@@ -27,46 +27,6 @@ public class NoiseSearchCondition extends JPanel {
     private final JSpinner thresholdSpinner;
     private final JComboBox<String> conditionTypeCombo;
     private final JComboBox<String> thresholdConditionCombo;
-
-    public NoiseType getNoiseType() {
-        return (NoiseType) noiseTypeCombo.getSelectedItem();
-    }
-
-    public int getMinX() {
-        return (Integer) minXSpinner.getValue();
-    }
-
-    public int getMaxX() {
-        return (Integer) maxXSpinner.getValue();
-    }
-
-    public int getMinY() {
-        return (Integer) minYSpinner.getValue();
-    }
-
-    public int getMaxY() {
-        return (Integer) maxYSpinner.getValue();
-    }
-
-    public int getMinZ() {
-        return (Integer) minZSpinner.getValue();
-    }
-
-    public int getMaxZ() {
-        return (Integer) maxZSpinner.getValue();
-    }
-
-    public double getThreshold() {
-        return (Double) thresholdSpinner.getValue();
-    }
-
-    public int getThresholdConditionIndex() {
-        return thresholdConditionCombo.getSelectedIndex();
-    }
-
-    public int getConditionTypeIndex() {
-        return conditionTypeCombo.getSelectedIndex();
-    }
 
     public void setValues(NoiseType noiseType, int minX, int maxX, int minY, int maxY,
             int minZ, int maxZ, double threshold,
@@ -83,7 +43,7 @@ public class NoiseSearchCondition extends JPanel {
         conditionTypeCombo.setSelectedIndex(conditionTypeIndex);
     }
 
-    public NoiseSearchCondition(NoiseSearchPanel parentPanel) {
+    public NoiseSearchCondition(SearchPanel parentPanel) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Noise Condition"));
 
@@ -179,4 +139,15 @@ public class NoiseSearchCondition extends JPanel {
 
         return requireAll;
     }
+
+    public NoiseType getNoiseType() { return (NoiseType) noiseTypeCombo.getSelectedItem(); }
+    public int getThresholdConditionIndex() { return thresholdConditionCombo.getSelectedIndex(); }
+    public int getConditionTypeIndex() { return conditionTypeCombo.getSelectedIndex(); }
+    public double getThreshold() { return (Double) thresholdSpinner.getValue(); }
+    public int getMinX() { return (Integer) minXSpinner.getValue(); }
+    public int getMaxX() { return (Integer) maxXSpinner.getValue(); }
+    public int getMinY() { return (Integer) minYSpinner.getValue(); }
+    public int getMaxY() { return (Integer) maxYSpinner.getValue(); }
+    public int getMinZ() { return (Integer) minZSpinner.getValue(); }
+    public int getMaxZ() { return (Integer) maxZSpinner.getValue(); }
 }

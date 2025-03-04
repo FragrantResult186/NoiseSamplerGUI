@@ -5,11 +5,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.io.BufferedReader;
 import java.awt.BorderLayout;
+import java.util.Collections;
 import java.awt.CardLayout;
 import java.awt.FlowLayout;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.io.FileReader;
 import java.awt.Dimension;
 import java.awt.Insets;
@@ -36,19 +36,24 @@ import javax.swing.Box;
 
 import fragrant.memory.SearchConditionStorage;
 import fragrant.search.HeightSearchCondition;
+import fragrant.search.BiomeSearchCondition;
 import fragrant.search.NoiseSearchCondition;
 import fragrant.settings.AppSettings;
 import fragrant.MainUI;
 
+import nl.jellejurre.seedchecker.SeedCheckerDimension;
+import nl.jellejurre.biomesampler.minecraft.Biome;
 import nl.kallestruik.noisesampler.NoiseSampler;
+import nl.jellejurre.biomesampler.BiomeSampler;
 import nl.jellejurre.seedchecker.SeedChecker;
 import nl.kallestruik.noisesampler.NoiseType;
 
-public class NoiseSearchPanel extends JPanel {
+public class SearchPanel extends JPanel {
     private static final int MAX_THREADS = Runtime.getRuntime().availableProcessors();
 
-    private final List<NoiseSearchCondition> searchConditions;
+    private final List<NoiseSearchCondition> noiseConditions;
     private final List<HeightSearchCondition> heightConditions = new ArrayList<>();
+    private final List<BiomeSearchCondition> biomeConditions = new ArrayList<>();
 
     private volatile long lastProcessedSeed = 0;
     private final List<Long> seedsFromFile = new ArrayList<>();
@@ -58,10 +63,11 @@ public class NoiseSearchPanel extends JPanel {
     private JTextField fixedBitsField;
     private JTextField seedFileField;
     private JButton browseSeedFileButton;
-    private JButton startSearchButton;
-    private JButton stopSearchButton;
+    private final JButton startSearchButton;
+    private final JButton stopSearchButton;
     private JSpinner threadCountSpinner;
     private JComboBox<String> seedRangeCombo;
+    private final JComboBox<SeedCheckerDimension> dimensionComboBox;
     private JPanel conditionsPanel;
     private JPanel contentPanel;
     private CardLayout contentCardLayout;
@@ -69,11 +75,15 @@ public class NoiseSearchPanel extends JPanel {
     private ExecutorService executorService;
     private final List<Future<?>> searchTasks;
     private volatile boolean isSearching = false;
+    private volatile boolean maxSeedsMessageShown = false;
 
-    public NoiseSearchPanel(MainUI mainWindow) {
+    public SearchPanel(MainUI mainWindow) {
         this.mainWindow = mainWindow;
-        this.searchConditions = new ArrayList<>();
+        this.noiseConditions = new ArrayList<>();
         this.searchTasks = new ArrayList<>();
+
+        dimensionComboBox = new JComboBox<>(SeedCheckerDimension.values());
+        dimensionComboBox.setSelectedItem(SeedCheckerDimension.OVERWORLD);
 
         setLayout(new BorderLayout());
 
@@ -111,20 +121,20 @@ public class NoiseSearchPanel extends JPanel {
                 threadCountSpinner.setValue(config.threadCount);
             }
 
-            for (SearchConditionStorage.ConditionData conditionData : config.conditions) {
+            for (SearchConditionStorage.NoiseConditionData noiseConditionData : config.noiseConditionData) {
                 NoiseSearchCondition condition = new NoiseSearchCondition(this);
                 condition.setValues(
-                        NoiseType.valueOf(conditionData.noiseType),
-                        conditionData.minX, conditionData.maxX,
-                        conditionData.minY, conditionData.maxY,
-                        conditionData.minZ, conditionData.maxZ,
-                        conditionData.threshold,
-                        conditionData.thresholdConditionIndex,
-                        conditionData.conditionTypeIndex);
-                searchConditions.add(condition);
+                        NoiseType.valueOf(noiseConditionData.noiseType),
+                        noiseConditionData.minX, noiseConditionData.maxX,
+                        noiseConditionData.minY, noiseConditionData.maxY,
+                        noiseConditionData.minZ, noiseConditionData.maxZ,
+                        noiseConditionData.threshold,
+                        noiseConditionData.thresholdConditionIndex,
+                        noiseConditionData.conditionTypeIndex);
+                noiseConditions.add(condition);
                 conditionsPanel.add(condition);
             }
-
+            
             if (config.heightConditions != null) {
                 for (SearchConditionStorage.HeightConditionData heightData : config.heightConditions) {
                     HeightSearchCondition condition = new HeightSearchCondition(this);
@@ -138,6 +148,24 @@ public class NoiseSearchPanel extends JPanel {
                     conditionsPanel.add(condition);
                 }
             }
+
+            if (config.biomeConditions != null) {
+                for (SearchConditionStorage.BiomeConditionData biomeData : config.biomeConditions) {
+                    BiomeSearchCondition condition = new BiomeSearchCondition(this);
+                    condition.setValues(
+                        Biome.valueOf(biomeData.biome),
+                        biomeData.minX, biomeData.maxX,
+                        biomeData.minZ, biomeData.maxZ,
+                        biomeData.conditionTypeIndex
+                    );
+                    biomeConditions.add(condition);
+                    conditionsPanel.add(condition);
+                }
+            }
+        
+            updateConditionsPanelSize();
+            conditionsPanel.revalidate();
+            conditionsPanel.repaint();        
 
             updateConditionsPanelSize();
             conditionsPanel.revalidate();
@@ -301,11 +329,13 @@ public class NoiseSearchPanel extends JPanel {
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
         JButton addConditionButton = new JButton("Add Noise Condition");
-        JButton clearResultsButton = new JButton("Clear Results");
         JButton addHeightConditionButton = new JButton("Add Height Condition");
+        JButton addBiomeConditionButton = new JButton("Add Biome Condition");
+        JButton clearResultsButton = new JButton("Clear Results");
 
         addConditionButton.addActionListener(e -> addNoiseCondition());
         addHeightConditionButton.addActionListener(e -> addHeightCondition());
+        addBiomeConditionButton.addActionListener(e -> addBiomeCondition());
         startSearchButton.addActionListener(e -> startSearch());
         stopSearchButton.addActionListener(e -> stopSearch());
         clearResultsButton.addActionListener(e -> mainWindow.getResultPanel().clearResults());
@@ -313,6 +343,8 @@ public class NoiseSearchPanel extends JPanel {
         panel.add(addConditionButton);
         panel.add(Box.createHorizontalStrut(5));
         panel.add(addHeightConditionButton);
+        panel.add(Box.createHorizontalStrut(5));
+        panel.add(addBiomeConditionButton);
         panel.add(Box.createHorizontalStrut(20));
         panel.add(startSearchButton);
         panel.add(Box.createHorizontalStrut(5));
@@ -336,33 +368,34 @@ public class NoiseSearchPanel extends JPanel {
         long startSeed = 0;
         try {
             startSeed = Long.parseLong(startSeedField.getText());
-        } catch (NumberFormatException ex) {
+        } catch (NumberFormatException ignored) {
         }
-        SearchConditionStorage.saveConditions(this, this, searchConditions, heightConditions, startSeed);
+        SearchConditionStorage.saveConditions(this, this, noiseConditions, heightConditions, startSeed);
     }
 
     private void loadSavedSettings() {
         SearchConditionStorage.loadConditions(this).ifPresent(config -> {
-            searchConditions.clear();
+            noiseConditions.clear();
             heightConditions.clear();
+            biomeConditions.clear();
             conditionsPanel.removeAll();
-
+    
             startSeedField.setText(String.valueOf(config.startSeed));
-
-            for (SearchConditionStorage.ConditionData conditionData : config.conditions) {
+    
+            for (SearchConditionStorage.NoiseConditionData noiseConditionData : config.noiseConditionData) {
                 NoiseSearchCondition condition = new NoiseSearchCondition(this);
                 condition.setValues(
-                        NoiseType.valueOf(conditionData.noiseType),
-                        conditionData.minX, conditionData.maxX,
-                        conditionData.minY, conditionData.maxY,
-                        conditionData.minZ, conditionData.maxZ,
-                        conditionData.threshold,
-                        conditionData.thresholdConditionIndex,
-                        conditionData.conditionTypeIndex);
-                searchConditions.add(condition);
+                        NoiseType.valueOf(noiseConditionData.noiseType),
+                        noiseConditionData.minX, noiseConditionData.maxX,
+                        noiseConditionData.minY, noiseConditionData.maxY,
+                        noiseConditionData.minZ, noiseConditionData.maxZ,
+                        noiseConditionData.threshold,
+                        noiseConditionData.thresholdConditionIndex,
+                        noiseConditionData.conditionTypeIndex);
+                noiseConditions.add(condition);
                 conditionsPanel.add(condition);
             }
-
+    
             if (config.heightConditions != null) {
                 for (SearchConditionStorage.HeightConditionData heightData : config.heightConditions) {
                     HeightSearchCondition condition = new HeightSearchCondition(this);
@@ -376,7 +409,21 @@ public class NoiseSearchPanel extends JPanel {
                     conditionsPanel.add(condition);
                 }
             }
-
+    
+            if (config.biomeConditions != null) {
+                for (SearchConditionStorage.BiomeConditionData biomeData : config.biomeConditions) {
+                    BiomeSearchCondition condition = new BiomeSearchCondition(this);
+                    condition.setValues(
+                        Biome.valueOf(biomeData.biome),
+                        biomeData.minX, biomeData.maxX,
+                        biomeData.minZ, biomeData.maxZ,
+                        biomeData.conditionTypeIndex
+                    );
+                    biomeConditions.add(condition);
+                    conditionsPanel.add(condition);
+                }
+            }
+    
             updateConditionsPanelSize();
             conditionsPanel.revalidate();
             conditionsPanel.repaint();
@@ -391,7 +438,7 @@ public class NoiseSearchPanel extends JPanel {
                 try {
                     long seed = Long.parseLong(line.trim());
                     seedsFromFile.add(seed);
-                } catch (NumberFormatException e) {
+                } catch (NumberFormatException ignored) {
                 }
             }
             JOptionPane.showMessageDialog(this,
@@ -408,17 +455,9 @@ public class NoiseSearchPanel extends JPanel {
 
     private void startSearch() {
         mainWindow.getResultPanel().startProcessing();
-        /*
-         * if (searchConditions.isEmpty()) {
-         * JOptionPane.showMessageDialog(this,
-         * "Please add at least one noise condition.",
-         * "No Conditions",
-         * JOptionPane.WARNING_MESSAGE);
-         * return;
-         * }
-         */
+        maxSeedsMessageShown = false;
 
-        if (searchConditions.isEmpty() && heightConditions.isEmpty()) {
+        if (noiseConditions.isEmpty() && heightConditions.isEmpty() && biomeConditions.isEmpty()) {
             JOptionPane.showMessageDialog(this,
                     "Please add at least one search condition.",
                     "No Conditions",
@@ -462,8 +501,6 @@ public class NoiseSearchPanel extends JPanel {
             } else {
                 fixedBits = 0;
             }
-
-            System.out.println("Fixed Bits: " + fixedBits);
 
             final long mask;
             final long fixedBitsMask;
@@ -509,7 +546,10 @@ public class NoiseSearchPanel extends JPanel {
                                 && isSearching; j++) {
                             long seed = seedsFromFile.get(j);
                             if (checkSeed(seed)) {
-                                SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(seed));
+                                SwingUtilities.invokeLater(() -> {
+                                    mainWindow.getResultPanel().addSeed(seed);
+                                    checkAndStopSearchIfNeeded();
+                                });
                             }
                             lastProcessedSeed = seed;
                             mainWindow.incrementProcessedSeeds();
@@ -531,7 +571,10 @@ public class NoiseSearchPanel extends JPanel {
                         while (!Thread.currentThread().isInterrupted() && isSearching) {
                             if (checkSeed(seed)) {
                                 final long foundSeed = seed;
-                                SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(foundSeed));
+                                SwingUtilities.invokeLater(() -> {
+                                    mainWindow.getResultPanel().addSeed(foundSeed);
+                                    checkAndStopSearchIfNeeded();
+                                });
                             }
                             lastProcessedSeed = seed;
 
@@ -551,10 +594,18 @@ public class NoiseSearchPanel extends JPanel {
                     "Input Error",
                     JOptionPane.ERROR_MESSAGE);
         }
+    }
 
-        if (mainWindow.getResultPanel().getSeedListModel().size() >= AppSettings.getMaxSeeds()) {
-            stopSearch();
-            return;
+    private synchronized void checkAndStopSearchIfNeeded() {
+        if (!maxSeedsMessageShown && mainWindow.getResultPanel().getSeedListModel().size() >= AppSettings.getMaxSeeds()) {
+            maxSeedsMessageShown = true;
+            SwingUtilities.invokeLater(() -> {
+                stopSearch();
+                JOptionPane.showMessageDialog(this,
+                    String.format("Search stopped: Maximum number of seeds (%d) reached", AppSettings.getMaxSeeds()),
+                    "Maximum Seeds Reached",
+                    JOptionPane.INFORMATION_MESSAGE);
+            });
         }
     }
 
@@ -571,18 +622,35 @@ public class NoiseSearchPanel extends JPanel {
         startSeedField.setText(String.valueOf(lastProcessedSeed + 1));
         mainWindow.getResultPanel().stopProcessing();
     }
-
+    
     private void addNoiseCondition() {
         NoiseSearchCondition condition = new NoiseSearchCondition(this);
-        searchConditions.add(condition);
+        noiseConditions.add(condition);
         conditionsPanel.add(condition);
         updateConditionsPanelSize();
         conditionsPanel.revalidate();
         conditionsPanel.repaint();
     }
 
+    private void addBiomeCondition() {
+        BiomeSearchCondition condition = new BiomeSearchCondition(this);
+        biomeConditions.add(condition);
+        conditionsPanel.add(condition);
+        updateConditionsPanelSize();
+        conditionsPanel.revalidate();
+        conditionsPanel.repaint();
+    }
+
+    public void removeBiomeCondition(BiomeSearchCondition condition) {
+        biomeConditions.remove(condition);
+        conditionsPanel.remove(condition);
+        updateConditionsPanelSize();
+        conditionsPanel.revalidate();
+        conditionsPanel.repaint();
+    }
+
     private void updateConditionsPanelSize() {
-        int preferredHeight = Math.min(300, searchConditions.size() * 250);
+        int preferredHeight = Math.min(300, noiseConditions.size() * 250);
         JScrollPane scrollPane = (JScrollPane) conditionsPanel.getParent().getParent();
         scrollPane.setPreferredSize(new Dimension(
                 conditionsPanel.getPreferredSize().width,
@@ -591,24 +659,31 @@ public class NoiseSearchPanel extends JPanel {
     }
 
     private boolean checkSeed(long seed) {
-        NoiseSampler sampler = new NoiseSampler(seed, nl.kallestruik.noisesampler.minecraft.Dimension.OVERWORLD);
-        if (!searchConditions.stream().allMatch(condition -> condition.checkCondition(sampler))) {
-            return false;
+        if (!noiseConditions.isEmpty()) {
+            NoiseSampler sampler = new NoiseSampler(seed, nl.kallestruik.noisesampler.minecraft.Dimension.OVERWORLD);
+            if (!noiseConditions.stream().allMatch(condition -> condition.checkCondition(sampler))) {
+                return false;
+            }
         }
-
+    
         if (!heightConditions.isEmpty()) {
             SeedChecker checker = new SeedChecker(seed);
             if (!heightConditions.stream().allMatch(condition -> condition.checkCondition(checker))) {
                 return false;
             }
         }
-
-        SwingUtilities.invokeLater(() -> mainWindow.getResultPanel().addSeed(seed));
-        return false;
-    }
+    
+        if (!biomeConditions.isEmpty()) {
+            BiomeSampler biomeSampler = new BiomeSampler(seed, nl.kallestruik.noisesampler.minecraft.Dimension.OVERWORLD);
+            if (!biomeConditions.stream().allMatch(condition -> condition.checkCondition(biomeSampler))) {
+                return false;
+            }
+        }
+        return true;
+    }    
 
     public void removeCondition(NoiseSearchCondition condition) {
-        searchConditions.remove(condition);
+        noiseConditions.remove(condition);
         conditionsPanel.remove(condition);
         updateConditionsPanelSize();
         conditionsPanel.revalidate();
@@ -638,9 +713,9 @@ public class NoiseSearchPanel extends JPanel {
             conditionsPanel.add((java.awt.Component) condition, index - 1);
 
             if (condition instanceof NoiseSearchCondition) {
-                int noiseIndex = searchConditions.indexOf(condition);
+                int noiseIndex = noiseConditions.indexOf(condition);
                 if (noiseIndex > 0) {
-                    Collections.swap(searchConditions, noiseIndex, noiseIndex - 1);
+                    Collections.swap(noiseConditions, noiseIndex, noiseIndex - 1);
                 }
             } else if (condition instanceof HeightSearchCondition) {
                 int heightIndex = heightConditions.indexOf(condition);
@@ -668,9 +743,9 @@ public class NoiseSearchPanel extends JPanel {
             conditionsPanel.add((java.awt.Component) condition, index + 1);
 
             if (condition instanceof NoiseSearchCondition) {
-                int noiseIndex = searchConditions.indexOf(condition);
-                if (noiseIndex < searchConditions.size() - 1) {
-                    Collections.swap(searchConditions, noiseIndex, noiseIndex + 1);
+                int noiseIndex = noiseConditions.indexOf(condition);
+                if (noiseIndex < noiseConditions.size() - 1) {
+                    Collections.swap(noiseConditions, noiseIndex, noiseIndex + 1);
                 }
             } else if (condition instanceof HeightSearchCondition) {
                 int heightIndex = heightConditions.indexOf(condition);
@@ -709,7 +784,7 @@ public class NoiseSearchPanel extends JPanel {
     }
 
     public List<NoiseSearchCondition> getSearchConditions() {
-        return searchConditions;
+        return noiseConditions;
     }
 
     public JTextField getStartSeedField() {
@@ -718,5 +793,13 @@ public class NoiseSearchPanel extends JPanel {
 
     public List<HeightSearchCondition> getHeightConditions() {
         return heightConditions;
+    }
+
+    public List<BiomeSearchCondition> getBiomeConditions() {
+        return biomeConditions;
+    }
+
+    public SeedCheckerDimension getSelectedDimension() {
+        return (SeedCheckerDimension) dimensionComboBox.getSelectedItem();
     }
 }

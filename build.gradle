@@ -7,12 +7,13 @@ plugins {
 repositories {
     maven { url "https://jitpack.io" }
     maven { url "https://repo.jellejurre.dev" }
+    mavenCentral()
 }
 
 sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
-version = "1.3.0"
+version = "1.4.0"
 group = "fragrant.noisesampler"
 
 def ENV = System.getenv()
@@ -20,19 +21,18 @@ def ENV = System.getenv()
 dependencies {
     implementation 'com.formdev:flatlaf:3.5.4'
     implementation 'com.google.code.gson:gson:2.8.9'
+    implementation('com.google.guava:guava:31.0.1-jre')
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.4.2'
 
     minecraft "com.mojang:minecraft:1.18.1"
-    mappings "com.github.jellejurre:yarn:1156d87670"
     modImplementation "net.fabricmc:fabric-loader:0.12.12"
 
-    implementation('com.google.guava:guava:31.0.1-jre')
-
-    testImplementation 'org.junit.jupiter:junit-jupiter'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
-
+    // KalleStruik
     implementation 'com.github.KalleStruik:noise-sampler:1.20.0'
+
+    // jellejurre
     implementation('com.github.jellejurre:seed-checker:1.2.0-1.18.1') { transitive = false }
+    mappings "com.github.jellejurre:yarn:1156d87670"
 }
 
 processResources {
@@ -69,7 +69,7 @@ shadowJar {
 
     archiveBaseName.set("NoiseSamplerGUI")
     archiveClassifier.set("")
-    archiveVersion.set("1.3.0")
+    archiveVersion.set("1.4.0")
 }
 
 publishing {

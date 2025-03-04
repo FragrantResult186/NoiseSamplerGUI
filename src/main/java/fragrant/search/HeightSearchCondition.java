@@ -14,20 +14,16 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import fragrant.components.NoiseSearchPanel;
+import fragrant.components.SearchPanel;
 
 import nl.jellejurre.seedchecker.*;
 
 public class HeightSearchCondition extends JPanel {
-    private final JSpinner minXSpinner;
-    private final JSpinner maxXSpinner;
-    private final JSpinner minZSpinner;
-    private final JSpinner maxZSpinner;
-    private final JSpinner minHeightSpinner;
-    private final JSpinner maxHeightSpinner;
-    private final NoiseSearchPanel parentPanel;
+    private final JSpinner minXSpinner, maxXSpinner, minZSpinner, maxZSpinner, minHeightSpinner, maxHeightSpinner;
+    private final SearchPanel parentPanel;
+    private static final int TARGET_LEVEL = 5;
 
-    public HeightSearchCondition(NoiseSearchPanel parent) {
+    public HeightSearchCondition(SearchPanel parent) {
         this.parentPanel = parent;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createTitledBorder("Height Condition"));
@@ -80,6 +76,11 @@ public class HeightSearchCondition extends JPanel {
     }
 
     public boolean checkCondition(SeedChecker checker) {
+        SeedChecker optimizedChecker = new SeedChecker(
+            checker.getSeed(),
+            TARGET_LEVEL
+        );
+        
         int minX = (Integer) minXSpinner.getValue();
         int maxX = (Integer) maxXSpinner.getValue();
         int minZ = (Integer) minZSpinner.getValue();
@@ -91,47 +92,34 @@ public class HeightSearchCondition extends JPanel {
             return false;
         }
 
-        for (int x = minX; x <= maxX; x++) {
-            for (int z = minZ; z <= maxZ; z++) {
-                int highestY = -64;
-                for (int y = 256; y >= -64; y--) {
-                    var blockState = checker.getBlockState(x, y, z);
-                    if (!blockState.isAir()) {
-                        highestY = y;
-                        break;
+        try {
+            for (int x = minX; x <= maxX; x++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    int highestY = -64;
+                    for (int y = 256; y >= -64; y--) {
+                        var blockState = optimizedChecker.getBlockState(x, y, z);
+                        if (!blockState.isAir()) {
+                            highestY = y;
+                            break;
+                        }
+                    }
+
+                    if (highestY >= minHeight && highestY <= maxHeight) {
+                        return true;
                     }
                 }
-
-                if (highestY >= minHeight && highestY <= maxHeight) {
-                    return true;
-                }
             }
+        } finally {
+            optimizedChecker.clearMemory();
         }
 
         return false;
     }
 
-    public JSpinner getMinXSpinner() {
-        return minXSpinner;
-    }
-
-    public JSpinner getMaxXSpinner() {
-        return maxXSpinner;
-    }
-
-    public JSpinner getMinZSpinner() {
-        return minZSpinner;
-    }
-
-    public JSpinner getMaxZSpinner() {
-        return maxZSpinner;
-    }
-
-    public JSpinner getMinHeightSpinner() {
-        return minHeightSpinner;
-    }
-
-    public JSpinner getMaxHeightSpinner() {
-        return maxHeightSpinner;
-    }
+    public JSpinner getMinXSpinner() { return minXSpinner; }
+    public JSpinner getMaxXSpinner() { return maxXSpinner; }
+    public JSpinner getMinZSpinner() { return minZSpinner; }
+    public JSpinner getMaxZSpinner() { return maxZSpinner; }
+    public JSpinner getMinHeightSpinner() { return minHeightSpinner; }
+    public JSpinner getMaxHeightSpinner() { return maxHeightSpinner; }
 }

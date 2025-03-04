@@ -1,8 +1,9 @@
 package fragrant.memory;
 
 import fragrant.search.HeightSearchCondition;
-import fragrant.components.NoiseSearchPanel;
 import fragrant.search.NoiseSearchCondition;
+import fragrant.search.BiomeSearchCondition;
+import fragrant.components.SearchPanel;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -22,7 +23,7 @@ public class SearchConditionStorage {
             .serializeNulls()
             .create();
 
-    public static class ConditionData {
+    public static class NoiseConditionData {
         public String noiseType;
         public int minX;
         public int maxX;
@@ -34,8 +35,8 @@ public class SearchConditionStorage {
         public int thresholdConditionIndex;
         public int conditionTypeIndex;
 
-        public static ConditionData fromCondition(NoiseSearchCondition condition) {
-            ConditionData data = new ConditionData();
+        public static NoiseConditionData fromCondition(NoiseSearchCondition condition) {
+            NoiseConditionData data = new NoiseConditionData();
             data.noiseType = condition.getNoiseType().name();
             data.minX = condition.getMinX();
             data.maxX = condition.getMaxX();
@@ -84,30 +85,64 @@ public class SearchConditionStorage {
         }
     }    
 
+    public static class BiomeConditionData {
+        public String biome;
+        public int minX;
+        public int maxX;
+        public int minZ;
+        public int maxZ;
+        public int conditionTypeIndex;
+        
+        public BiomeConditionData() {}
+    
+        public BiomeConditionData(String biome, int minX, int maxX, int minZ, int maxZ, int conditionTypeIndex) {
+            this.biome = biome;
+            this.minX = minX;
+            this.maxX = maxX;
+            this.minZ = minZ;
+            this.maxZ = maxZ;
+            this.conditionTypeIndex = conditionTypeIndex;
+        }
+    
+        public static BiomeConditionData fromCondition(BiomeSearchCondition condition) {
+            BiomeConditionData data = new BiomeConditionData();
+            data.biome = condition.getBiome().name();
+            data.minX = condition.getMinX();
+            data.maxX = condition.getMaxX();
+            data.minZ = condition.getMinZ();
+            data.maxZ = condition.getMaxZ();
+            data.conditionTypeIndex = condition.getConditionTypeIndex();
+            return data;
+        }
+    }
+
     public static class SearchConfig {
         public long startSeed;
         public String searchMode;
         public String fixedBits;
         public String seedFilePath;
         public int threadCount;
-        public List<ConditionData> conditions;
+        public List<NoiseConditionData> noiseConditionData;
         public List<HeightConditionData> heightConditions;
+        public List<BiomeConditionData> biomeConditions;
 
         public SearchConfig() {
-            conditions = new ArrayList<>();
+            noiseConditionData = new ArrayList<>();
             heightConditions = new ArrayList<>();
+            biomeConditions = new ArrayList<>();
         }
     }
 
-    public static void saveConditions(Component parent, NoiseSearchPanel panel,
-                                      List<NoiseSearchCondition> conditions, long startSeed) {
-        saveConditions(parent, panel, conditions, panel.getHeightConditions(), startSeed);
+    public static void saveConditions(Component parent, SearchPanel panel,
+                                      List<NoiseSearchCondition> conditions, List<HeightSearchCondition> biomeConditions, long startSeed) {
+        saveConditions(parent, panel, conditions, panel.getHeightConditions(), panel.getBiomeConditions(), startSeed);
     }
 
-    public static void saveConditions(Component parent, NoiseSearchPanel panel,
-                                      List<NoiseSearchCondition> conditions,
-                                      List<HeightSearchCondition> heightConditions,
-                                      long startSeed) {
+    public static void saveConditions(Component parent, SearchPanel panel,
+                                    List<NoiseSearchCondition> conditions,
+                                    List<HeightSearchCondition> heightConditions,
+                                    List<BiomeSearchCondition> biomeConditions,
+                                    long startSeed) {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Choose a directory to save search conditions");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
@@ -117,7 +152,7 @@ public class SearchConditionStorage {
             File file = new File(selectedDirectory, "search_conditions.json");
 
             try {
-                SearchConfig config = createSearchConfig(panel, conditions, heightConditions, startSeed);
+                SearchConfig config = createSearchConfig(panel, conditions, heightConditions, biomeConditions, startSeed);
 
                 try (Writer writer = new FileWriter(file)) {
                     gson.toJson(config, writer);
@@ -137,18 +172,23 @@ public class SearchConditionStorage {
         }
     }
 
-    private static SearchConfig createSearchConfig(NoiseSearchPanel panel,
-                                                   List<NoiseSearchCondition> conditions,
-                                                   List<HeightSearchCondition> heightConditions,
-                                                   long startSeed) {
+    private static SearchConfig createSearchConfig(SearchPanel panel,
+                                                 List<NoiseSearchCondition> noiseConditionData,
+                                                 List<HeightSearchCondition> heightConditions,
+                                                 List<BiomeSearchCondition> biomeConditions,
+                                                 long startSeed) {
         SearchConfig config = new SearchConfig();
         config.startSeed = startSeed;
-        config.conditions = conditions.stream()
-                .map(ConditionData::fromCondition)
+        config.noiseConditionData = noiseConditionData.stream()
+                .map(NoiseConditionData::fromCondition)
                 .toList();
 
         config.heightConditions = heightConditions.stream()
                 .map(HeightConditionData::fromCondition)
+                .toList();
+
+        config.biomeConditions = biomeConditions.stream()
+                .map(BiomeConditionData::fromCondition)
                 .toList();
 
         config.searchMode = (String) panel.getSeedRangeCombo().getSelectedItem();
@@ -187,12 +227,13 @@ public class SearchConditionStorage {
         return Optional.empty();
     }
 
-    public static void saveDefaultConditions(Component parent, NoiseSearchPanel panel,
-                                             List<NoiseSearchCondition> conditions,
-                                             List<HeightSearchCondition> heightConditions,
-                                             long startSeed) {
+    public static void saveDefaultConditions(Component parent, SearchPanel panel,
+                                           List<NoiseSearchCondition> noiseConditionData,
+                                           List<HeightSearchCondition> heightConditions,
+                                           List<BiomeSearchCondition> biomeConditions,
+                                           long startSeed) {
         try {
-            SearchConfig config = createSearchConfig(panel, conditions, heightConditions, startSeed);
+            SearchConfig config = createSearchConfig(panel, noiseConditionData, heightConditions, biomeConditions, startSeed);
 
             Path configDir = Paths.get(System.getProperty("user.home"), ".noise_sampler");
             Files.createDirectories(configDir);
@@ -200,8 +241,9 @@ public class SearchConditionStorage {
             Path configPath = configDir.resolve(DEFAULT_CONFIG_FILE);
 
             System.out.println("Saving configuration with " +
-                    config.conditions.size() + " noise conditions and " +
-                    config.heightConditions.size() + " height conditions");
+                    config.noiseConditionData.size() + " noise conditions & " +
+                    config.heightConditions.size() + " height conditions & " +
+                    config.biomeConditions.size() + " biome conditions");
 
             try (Writer writer = new FileWriter(configPath.toFile())) {
                 gson.toJson(config, writer);
@@ -226,10 +268,10 @@ public class SearchConditionStorage {
 
             try (Reader reader = new FileReader(configPath.toFile())) {
                 SearchConfig config = gson.fromJson(reader, SearchConfig.class);
-                System.out.println("Loaded configuration with " + config.conditions.size() +
-                        " noise conditions and " +
-                        (config.heightConditions != null ? config.heightConditions.size() : 0) +
-                        " height conditions");
+                System.out.println("Loaded configuration with " + 
+                                 config.noiseConditionData.size() + " noise conditions & " +
+                                (config.heightConditions != null ? config.heightConditions.size() : 0) + " height conditions & " +
+                                (config.biomeConditions != null ? config.biomeConditions.size() : 0) + " biome conditions");
                 return Optional.of(config);
             }
         } catch (IOException | JsonSyntaxException e) {

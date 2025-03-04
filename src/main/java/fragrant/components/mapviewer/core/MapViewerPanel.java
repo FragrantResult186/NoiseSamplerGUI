@@ -1,42 +1,47 @@
-package fragrant.components.mapviewer;
-
-import java.awt.Dialog.ModalityType;
-import java.awt.image.BufferedImage;
-import java.awt.event.*;
-import java.awt.*;
-
-import javax.swing.table.DefaultTableModel;
-import javax.swing.border.EmptyBorder;
-import javax.swing.*;
+package fragrant.components.mapviewer.core;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import javax.swing.border.EmptyBorder;
+import java.awt.image.BufferedImage;
 import java.util.concurrent.*;
+import java.util.Objects;
+import java.awt.event.*;
 import java.util.List;
 import java.util.Map;
+import javax.swing.*;
+import java.awt.*;
 
 import net.minecraft.util.registry.Registry;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.item.ItemStack;
 import net.minecraft.block.Block;
 
+import fragrant.components.mapviewer.ui.LoadingSpinner;
+import fragrant.components.mapviewer.model.BlockInfo;
+import fragrant.components.mapviewer.model.ChunkData;
+import fragrant.components.mapviewer.model.ChunkKey;
+
 import nl.jellejurre.seedchecker.SeedCheckerDimension;
 import nl.jellejurre.seedchecker.SeedCheckerSettings;
 import nl.jellejurre.seedchecker.SeedChecker;
+
+import nl.kallestruik.noisesampler.NoiseSampler;
+import nl.kallestruik.noisesampler.NoiseType;
 
 public class MapViewerPanel extends JPanel {
     private static final int RENDER_DELAY = 50;
     private static final int HIGHLIGHT_PADDING = 2;
     private static final int MAX_RENDER_ATTEMPTS = 3;
-    private static final long RENDER_TIMEOUT = 5000;
+    private static final long RENDER_TIMEOUT = 70000;
     private static final long LOADING_DISPLAY_THRESHOLD = 200;
 
-    private int centerX = 0;
-    private int centerY = 95;
-    private int centerZ = 0;
-    private int blockSize = 8;
+    protected int centerX = 0;
+    protected int centerY = 95;
+    protected int centerZ = 0;
+    protected int blockSize = 8;
     private int depthRange = 128;
-    private int highlightedBlockDepth = 0;
+    private final int highlightedBlockDepth = 0;
     private int targetLevel = 10;
     private long lastRenderTime = 0;
     private volatile boolean renderRequested = false;
@@ -48,8 +53,7 @@ public class MapViewerPanel extends JPanel {
     private JPanel mapPanel;
     private JPanel loadingOverlay;
     private JComboBox<SeedCheckerDimension> dimensionSelector;
-    private JDialog chestContentsDialog;
-    private JDialog helpDialog;
+    private Dialog dialogManager;
 
     private BufferedImage mapBuffer;
     private Timer renderTimer;
@@ -57,59 +61,21 @@ public class MapViewerPanel extends JPanel {
     private Timer retryTimer;
     private Timer loadingDisplayTimer;
 
-    private SeedCheckerDimension currentDimension = SeedCheckerDimension.OVERWORLD;
+    protected SeedCheckerDimension currentDimension = SeedCheckerDimension.OVERWORLD;
     private SeedChecker seedChecker;
     private BlockPos spawnPos;
     private Point highlightedBlock = null;
     private final Map<ChunkKey, ChunkData> chunkCache;
 
-    private AtomicInteger renderAttempts = new AtomicInteger(0);
+    private final AtomicInteger renderAttempts = new AtomicInteger(0);
     private final ExecutorService executorService;
     private final AtomicBoolean isRendering;
     private final Object blockAccessLock = new Object();
-    
-    private static class ChunkKey {
-        final int x, y, z;
 
-        ChunkKey(int x, int y, int z) {
-            this.x = x;
-            this.y = y;
-            this.z = z;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o)
-                return true;
-            if (!(o instanceof ChunkKey))
-                return false;
-            ChunkKey key = (ChunkKey) o;
-            return x == key.x && y == key.y && z == key.z;
-        }
-
-        @Override
-        public int hashCode() {
-            int result = 17;
-            result = 31 * result + x;
-            result = 31 * result + y;
-            result = 31 * result + z;
-            return result;
-        }
-    }
-
-    private static class ChunkData {
-        final Block[][][] blocks;
-        final long timestamp;
-
-        ChunkData(Block[][][] blocks) {
-            this.blocks = blocks;
-            this.timestamp = System.currentTimeMillis();
-        }
-
-        boolean isExpired() {
-            return System.currentTimeMillis() - timestamp > 30000;
-        }
-    }
+    private NoiseSampler noiseSampler;
+    private NoiseType selectedNoiseType = null;
+    private JComboBox<NoiseType> noiseTypeSelector;
+    private boolean showNoiseOverlay = false;
 
     public MapViewerPanel() {
         setLayout(new BorderLayout());
@@ -125,8 +91,9 @@ public class MapViewerPanel extends JPanel {
         initializeComponents();
         BlockInfo.initializeBlockColors();
         setupRenderTimer();
-        createHelpDialog();
-        createChestContentsDialog();
+        dialogManager = new Dialog();
+        dialogManager.createHelpDialog(this);
+        dialogManager.createChestContentsDialog(this);    
     }
 
     private void showLoadingOverlay() {
@@ -196,35 +163,39 @@ public class MapViewerPanel extends JPanel {
 
     private void initializeComponents() {
         setLayout(new BorderLayout());
-
+    
         JPanel mainControlPanel = new JPanel(new BorderLayout(5, 0));
         mainControlPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
-
+    
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
         setupSeedControls(leftPanel);
-
+        setupNoiseControls(leftPanel);
+    
         JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 0));
         setupCoordinateControls(centerPanel);
-
+    
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
         setupZoomControl(rightPanel);
-
+    
         JButton helpButton = new JButton("Controls");
         helpButton.addActionListener(e -> {
-            if (helpDialog == null)
-                createHelpDialog();
-            helpDialog.setVisible(true);
+            dialogManager.showHelpDialog();
         });
         rightPanel.add(helpButton);
-
+    
         mainControlPanel.add(leftPanel, BorderLayout.WEST);
         mainControlPanel.add(centerPanel, BorderLayout.CENTER);
         mainControlPanel.add(rightPanel, BorderLayout.EAST);
-
+    
+        JScrollPane controlScrollPane = new JScrollPane(mainControlPanel);
+        controlScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        controlScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        controlScrollPane.setBorder(BorderFactory.createEmptyBorder());
+    
         mapPanel = createMapPanel();
         setupKeyBindings(mapPanel);
         setupMouseListeners(mapPanel);
-
+    
         JPanel layeredContainer = new JPanel() {
             @Override
             public boolean isOptimizedDrawingEnabled() {
@@ -232,19 +203,17 @@ public class MapViewerPanel extends JPanel {
             }
         };
         layeredContainer.setLayout(new OverlayLayout(layeredContainer));
-
+    
         JScrollPane mapScrollPane = new JScrollPane(mapPanel);
         mapScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         mapScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-
+    
         layeredContainer.add(loadingOverlay);
         layeredContainer.add(mapScrollPane);
-
-        add(mainControlPanel, BorderLayout.NORTH);
+    
+        add(controlScrollPane, BorderLayout.NORTH);
         add(layeredContainer, BorderLayout.CENTER);
-
-        createChestContentsDialog();
-
+        
         SwingUtilities.invokeLater(() -> {
             mapPanel.requestFocusInWindow();
             mapPanel.setFocusable(true);
@@ -322,56 +291,6 @@ public class MapViewerPanel extends JPanel {
         loadingOverlay.setVisible(false);
     }
 
-    private class LoadingSpinner extends JPanel {
-        private float angle = 0;
-        private Timer timer;
-
-        public LoadingSpinner() {
-            timer = new Timer(50, e -> {
-                angle += 0.3;
-                if (angle >= 2 * Math.PI) {
-                    angle = 0;
-                }
-                repaint();
-            });
-        }
-
-        @Override
-        public void addNotify() {
-            super.addNotify();
-            timer.start();
-        }
-
-        @Override
-        public void removeNotify() {
-            timer.stop();
-            super.removeNotify();
-        }
-
-        @Override
-        protected void paintComponent(Graphics g) {
-            super.paintComponent(g);
-            Graphics2D g2d = (Graphics2D) g.create();
-            g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-            int size = Math.min(getWidth(), getHeight()) - 4;
-            int x = (getWidth() - size) / 2;
-            int y = (getHeight() - size) / 2;
-
-            g2d.rotate(angle, getWidth() / 2.0, getHeight() / 2.0);
-
-            for (int i = 0; i < 8; i++) {
-                float alpha = Math.max(0.2f, 1.0f - (i * 0.1f));
-                g2d.setColor(new Color(0, 0, 0, (int) (alpha * 255)));
-                g2d.fillOval(x + size / 2 + (int) (size / 3 * Math.cos(i * Math.PI / 4)),
-                        y + size / 2 + (int) (size / 3 * Math.sin(i * Math.PI / 4)),
-                        size / 8, size / 8);
-            }
-
-            g2d.dispose();
-        }
-    }
-
     private void loadSeed() {
         try {
             long seed = Long.parseLong(seedInput.getText().trim());
@@ -384,7 +303,7 @@ public class MapViewerPanel extends JPanel {
         }
     }
 
-    private void requestMapUpdate() {
+    public void requestMapUpdate() {
         if (!isRendering.get()) {
             showLoadingOverlay();
             renderRequested = true;
@@ -412,6 +331,35 @@ public class MapViewerPanel extends JPanel {
                 handleFailedRender();
             }
         });
+    }
+
+    private void setupNoiseControls(JPanel panel) {
+        JPanel noiseGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 2, 0));
+        noiseGroup.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createTitledBorder("Noise Visualization"),
+                new EmptyBorder(2, 2, 2, 2)));
+    
+        NoiseType[] noiseTypesWithNone = new NoiseType[NoiseType.values().length + 1];
+        noiseTypesWithNone[0] = null;
+        System.arraycopy(NoiseType.values(), 0, noiseTypesWithNone, 1, NoiseType.values().length);
+    
+        noiseTypeSelector = new JComboBox<>(noiseTypesWithNone);
+        noiseTypeSelector.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                String display = (value == null) ? "None" : value.toString();
+                return super.getListCellRendererComponent(list, display, index, isSelected, cellHasFocus);
+            }
+        });
+        noiseTypeSelector.setSelectedItem(null);
+        noiseTypeSelector.addActionListener(e -> {
+            selectedNoiseType = (NoiseType) noiseTypeSelector.getSelectedItem();
+            showNoiseOverlay = selectedNoiseType != null;
+            requestMapUpdate();
+        });
+    
+        noiseGroup.add(noiseTypeSelector);
+        panel.add(noiseGroup);
     }
 
     private void setupMouseListeners(JPanel panel) {
@@ -455,36 +403,10 @@ public class MapViewerPanel extends JPanel {
     }
 
     private void showChestContents(int x, int y, int z) {
-        if (seedChecker == null)
-            return;
-
+        if (seedChecker == null) return;
         List<ItemStack> contents = seedChecker.generateChestLoot(x, y, z);
-        if (contents == null || contents.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "No chest contents found at this location",
-                    "Empty Chest",
-                    JOptionPane.INFORMATION_MESSAGE);
-            return;
-        }
-
-        DefaultTableModel model = new DefaultTableModel(
-                new Object[] { "Item", "Count" }, 0);
-
-        for (ItemStack item : contents) {
-            model.addRow(new Object[] {
-                    item.getName().getString(),
-                    item.getCount()
-            });
-        }
-
-        JTable table = new JTable(model);
-        table.setFillsViewportHeight(true);
-
-        chestContentsDialog.getContentPane().removeAll();
-        chestContentsDialog.getContentPane().add(new JScrollPane(table));
-        chestContentsDialog.setTitle(String.format("Chest Contents at X:%d Y:%d Z:%d", x, y, z));
-        chestContentsDialog.setVisible(true);
-    }
+        dialogManager.showChestDialog(x, y, z, contents, this);
+    }    
 
     private String getBlockId(Block block) {
         return Registry.BLOCK.getId(block).getPath();
@@ -745,7 +667,7 @@ public class MapViewerPanel extends JPanel {
                 BorderFactory.createTitledBorder("Target Level"),
                 new EmptyBorder(2, 2, 2, 2)));
 
-        SpinnerNumberModel targetLevelModel = new SpinnerNumberModel(10, 6, 10, 1);
+        SpinnerNumberModel targetLevelModel = new SpinnerNumberModel(10, 5, 10, 1);
         JSpinner targetLevelSpinner = new JSpinner(targetLevelModel);
         targetLevelSpinner.setPreferredSize(new Dimension(60, targetLevelSpinner.getPreferredSize().height));
 
@@ -767,7 +689,7 @@ public class MapViewerPanel extends JPanel {
         dimensionSelector.setSelectedItem(currentDimension);
         dimensionSelector.addActionListener(e -> {
             currentDimension = (SeedCheckerDimension) dimensionSelector.getSelectedItem();
-            switch (currentDimension) {
+            switch (Objects.requireNonNull(currentDimension)) {
                 case NETHER:
                 case END:
                     centerY = 64;
@@ -793,51 +715,10 @@ public class MapViewerPanel extends JPanel {
         }
     }
 
-    private void createHelpDialog() {
-        helpDialog = new JDialog((Frame) null, "How to Use", ModalityType.MODELESS);
-        helpDialog.setSize(400, 500);
-
-        JTextArea helpText = new JTextArea();
-        helpText.setEditable(false);
-        helpText.setWrapStyleWord(true);
-        helpText.setLineWrap(true);
-        helpText.setText(
-                "Map Viewer Instructions:\n\n" +
-                        "Basic Controls:\n" +
-                        "- W: Move north\n" +
-                        "- S: Move south\n" +
-                        "- A: Move west\n" +
-                        "- D: Move east\n" +
-                        "- Q: Move up\n" +
-                        "- Z: Move down\n\n" +
-                        "Mouse Controls:\n" +
-                        "- Mouse hover: Display block information\n" +
-                        "- Click on chest: Show chest contents\n\n" +
-                        "View Settings:\n" +
-                        "- Zoom: Adjust display size\n" +
-                        "- Depth range: Adjust the visible depth range\n\n" +
-                        "Seed Operations:\n" +
-                        "1. Enter seed value\n" +
-                        "2. Click the Load button\n" +
-                        "3. Select dimension (world)\n\n" +
-                        "Other:\n" +
-                        "- Crosshair in the center: Current position\n" +
-                        "- Red cross mark: Spawn point\n" +
-                        "- Coordinate information: Displayed at the top left of the screen");
-
-        helpDialog.add(new JScrollPane(helpText));
-        helpDialog.setLocationRelativeTo(this);
-    }
-
-    private void createChestContentsDialog() {
-        chestContentsDialog = new JDialog((Frame) null, "Chest Contents", ModalityType.MODELESS);
-        chestContentsDialog.setSize(400, 300);
-        chestContentsDialog.setLocationRelativeTo(this);
-    }
-
     private void drawBlock(Graphics2D g2d, int worldX, int worldY, int worldZ,
             Block block, BlockInfo[][] visibilityMap,
             int viewWidth, int viewHeight) {
+
         String blockId = Registry.BLOCK.getId(block).getPath();
 
         if (BlockInfo.isTransparentBlock(blockId)) {
@@ -863,7 +744,18 @@ public class MapViewerPanel extends JPanel {
             return;
         }
 
-        Color baseColor = BlockInfo.getBlockColor(blockId);
+        Color baseColor;
+        if (showNoiseOverlay && selectedNoiseType != null && noiseSampler != null) {
+            double noiseValue = noiseSampler.queryNoiseFromBlockPos(
+                    worldX, worldY, worldZ,
+                    selectedNoiseType).get(selectedNoiseType);
+
+            float normalizedValue = (float) Math.max(0, Math.min(1, (noiseValue + 1) / 2));
+            baseColor = new Color(normalizedValue, normalizedValue, normalizedValue);
+        } else {
+            baseColor = BlockInfo.getBlockColor(blockId);
+        }
+
         Color depthAdjustedColor = applyDepthFade(baseColor, depth);
 
         g2d.setComposite(AlphaComposite.SrcOver);
@@ -974,7 +866,7 @@ public class MapViewerPanel extends JPanel {
             ChunkData data = chunkCache.get(key);
 
             if (data != null && !data.isExpired()) {
-                return data.blocks;
+                return data.getBlocks();
             }
 
             long startTime = System.currentTimeMillis();
@@ -1072,54 +964,53 @@ public class MapViewerPanel extends JPanel {
 
     private void drawSpawnMarker(Graphics2D g2d, int x, int y, float opacity) {
         int markerSize = Math.max(blockSize * 2, 16);
-        
+
         int glowSize = markerSize + (blockSize / 2);
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity * 0.7f));
-        
+
         RadialGradientPaint glow = new RadialGradientPaint(
-            x, y, glowSize,
-            new float[] { 0.0f, 0.7f, 1.0f },
-            new Color[] {
-                new Color(255, 128, 128, (int)(60 * opacity)),
-                new Color(255, 128, 128, (int)(30 * opacity)),
-                new Color(255, 128, 128, 0)
-            }
-        );
+                x, y, glowSize,
+                new float[] { 0.0f, 0.7f, 1.0f },
+                new Color[] {
+                        new Color(255, 128, 128, (int) (60 * opacity)),
+                        new Color(255, 128, 128, (int) (30 * opacity)),
+                        new Color(255, 128, 128, 0)
+                });
         g2d.setPaint(glow);
-        g2d.fillOval(x - glowSize/2, y - glowSize/2, glowSize, glowSize);
-    
+        g2d.fillOval(x - glowSize / 2, y - glowSize / 2, glowSize, glowSize);
+
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
         g2d.setColor(new Color(255, 128, 128));
         g2d.setStroke(new BasicStroke(Math.max(1.5f, blockSize * 0.15f)));
-        
+
         int innerCircleSize = markerSize / 2;
-        g2d.drawOval(x - innerCircleSize/2, y - innerCircleSize/2, innerCircleSize, innerCircleSize);
-        g2d.drawOval(x - markerSize/2, y - markerSize/2, markerSize, markerSize);
+        g2d.drawOval(x - innerCircleSize / 2, y - innerCircleSize / 2, innerCircleSize, innerCircleSize);
+        g2d.drawOval(x - markerSize / 2, y - markerSize / 2, markerSize, markerSize);
     }
-    
+
     private void drawSpawnLabel(Graphics2D g2d, int x, int y, float opacity) {
         String text = "SPAWN";
-        
+
         float fontSize = Math.max(10f, Math.min(blockSize * 1.0f, 16f));
-        Font labelFont = new Font("SansSerif", Font.BOLD, (int)fontSize);
+        Font labelFont = new Font("SansSerif", Font.BOLD, (int) fontSize);
         g2d.setFont(labelFont);
-        
+
         FontMetrics metrics = g2d.getFontMetrics(labelFont);
         int textWidth = metrics.stringWidth(text);
-        int padding = (int)(fontSize * 0.5);
-        
-        int rectX = x - textWidth/2 - padding;
+        int padding = (int) (fontSize * 0.5);
+
+        int rectX = x - textWidth / 2 - padding;
         int rectY = y - metrics.getHeight() + metrics.getDescent() - (blockSize);
         int rectWidth = textWidth + padding * 2;
         int rectHeight = metrics.getHeight() + padding;
-        
+
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity * 0.85f));
         g2d.setColor(new Color(32, 32, 40));
-        g2d.fillRoundRect(rectX, rectY, rectWidth, rectHeight, padding/2, padding/2);
-        
+        g2d.fillRoundRect(rectX, rectY, rectWidth, rectHeight, padding / 2, padding / 2);
+
         g2d.setColor(new Color(255, 128, 128));
         g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-        g2d.drawString(text, x - textWidth/2, y - blockSize);
+        g2d.drawString(text, x - textWidth / 2, y - blockSize);
     }
 
     private void drawChunk(Graphics2D g2d, int chunkX, int chunkY, int chunkZ,
@@ -1195,6 +1086,14 @@ public class MapViewerPanel extends JPanel {
             try {
                 SeedCheckerSettings.initialise();
                 this.seedChecker = new SeedChecker(seed, targetLevel, currentDimension);
+
+                nl.kallestruik.noisesampler.minecraft.Dimension noiseDimension = switch (currentDimension) {
+                    case OVERWORLD -> nl.kallestruik.noisesampler.minecraft.Dimension.OVERWORLD;
+                    case NETHER -> nl.kallestruik.noisesampler.minecraft.Dimension.NETHER;
+                    case END -> nl.kallestruik.noisesampler.minecraft.Dimension.THEEND;
+                };
+                this.noiseSampler = new NoiseSampler(seed, noiseDimension);
+
                 BlockPos originalSpawn = seedChecker.getSpawnPos();
 
                 if (currentDimension == SeedCheckerDimension.OVERWORLD && originalSpawn != null) {
