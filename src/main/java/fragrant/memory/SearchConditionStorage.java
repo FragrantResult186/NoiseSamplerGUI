@@ -10,6 +10,8 @@ import java.nio.file.Paths;
 import java.awt.Component;
 import java.nio.file.Path;
 import javax.swing.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.io.*;
 
@@ -58,21 +60,9 @@ public class SearchConditionStorage {
         public int maxZ;
         public int minHeight;
         public int maxHeight;
-        public String blockType;
-    
+
         public HeightConditionData() {}
-    
-        public HeightConditionData(int minX, int maxX, int minZ, int maxZ, 
-                                 int minHeight, int maxHeight, String blockType) {
-            this.minX = minX;
-            this.maxX = maxX;
-            this.minZ = minZ;
-            this.maxZ = maxZ;
-            this.minHeight = minHeight;
-            this.maxHeight = maxHeight;
-            this.blockType = blockType;
-        }
-    
+
         public static HeightConditionData fromCondition(HeightSearchCondition condition) {
             HeightConditionData data = new HeightConditionData();
             data.minX = (Integer) condition.getMinXSpinner().getValue();
@@ -94,16 +84,7 @@ public class SearchConditionStorage {
         public int conditionTypeIndex;
         
         public BiomeConditionData() {}
-    
-        public BiomeConditionData(String biome, int minX, int maxX, int minZ, int maxZ, int conditionTypeIndex) {
-            this.biome = biome;
-            this.minX = minX;
-            this.maxX = maxX;
-            this.minZ = minZ;
-            this.maxZ = maxZ;
-            this.conditionTypeIndex = conditionTypeIndex;
-        }
-    
+
         public static BiomeConditionData fromCondition(BiomeSearchCondition condition) {
             BiomeConditionData data = new BiomeConditionData();
             data.biome = condition.getBiome().name();
@@ -131,11 +112,6 @@ public class SearchConditionStorage {
             heightConditions = new ArrayList<>();
             biomeConditions = new ArrayList<>();
         }
-    }
-
-    public static void saveConditions(Component parent, SearchPanel panel,
-                                      List<NoiseSearchCondition> conditions, List<HeightSearchCondition> biomeConditions, long startSeed) {
-        saveConditions(parent, panel, conditions, panel.getHeightConditions(), panel.getBiomeConditions(), startSeed);
     }
 
     public static void saveConditions(Component parent, SearchPanel panel,
@@ -212,13 +188,42 @@ public class SearchConditionStorage {
         });
 
         if (fileChooser.showOpenDialog(parent) == JFileChooser.APPROVE_OPTION) {
-            try (Reader reader = new FileReader(fileChooser.getSelectedFile())) {
+            File selectedFile = fileChooser.getSelectedFile();
+            try (Reader reader = new FileReader(selectedFile)) {
                 SearchConfig config = gson.fromJson(reader, SearchConfig.class);
-                return Optional.of(config);
 
+                if (config == null) {
+                    throw new JsonSyntaxException("Failed to parse config file: empty or invalid content");
+                }
+
+                if (config.noiseConditionData == null) {
+                    config.noiseConditionData = new ArrayList<>();
+                }
+                if (config.heightConditions == null) {
+                    config.heightConditions = new ArrayList<>();
+                }
+                if (config.biomeConditions == null) {
+                    config.biomeConditions = new ArrayList<>();
+                }
+
+                return Optional.of(config);
             } catch (IOException | JsonSyntaxException e) {
+                e.printStackTrace();
+
+                try {
+                    String timestamp = LocalDateTime.now().format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                    Path backupPath = selectedFile.toPath().resolveSibling(
+                            selectedFile.getName() + ".backup." + timestamp);
+                    Files.copy(selectedFile.toPath(), backupPath);
+                    System.out.println("Corrupted file backed up to: " + backupPath);
+                } catch (Exception backupEx) {
+                    backupEx.printStackTrace();
+                }
+
                 JOptionPane.showMessageDialog(parent,
-                        "Failed to load search conditions: " + e.getMessage(),
+                        "Failed to load search conditions: " + e.getMessage() +
+                                "\nA backup of the corrupt file has been created if possible.",
                         "Load Error",
                         JOptionPane.ERROR_MESSAGE);
             }
@@ -235,7 +240,7 @@ public class SearchConditionStorage {
         try {
             SearchConfig config = createSearchConfig(panel, noiseConditionData, heightConditions, biomeConditions, startSeed);
 
-            Path configDir = Paths.get(System.getProperty("user.home"), ".noise_sampler");
+            Path configDir = Paths.get(System.getProperty("user.home"), ".noise_samplerGUI-1.5.0");
             Files.createDirectories(configDir);
 
             Path configPath = configDir.resolve(DEFAULT_CONFIG_FILE);
@@ -260,7 +265,7 @@ public class SearchConditionStorage {
 
     public static Optional<SearchConfig> loadDefaultConditions(Component parent) {
         try {
-            Path configPath = Paths.get(System.getProperty("user.home"), ".noise_sampler", DEFAULT_CONFIG_FILE);
+            Path configPath = Paths.get(System.getProperty("user.home"), ".noise_samplerGUI-1.5.0", DEFAULT_CONFIG_FILE);
             if (!Files.exists(configPath)) {
                 System.out.println("No default configuration found.");
                 return Optional.empty();
@@ -268,16 +273,45 @@ public class SearchConditionStorage {
 
             try (Reader reader = new FileReader(configPath.toFile())) {
                 SearchConfig config = gson.fromJson(reader, SearchConfig.class);
-                System.out.println("Loaded configuration with " + 
-                                 config.noiseConditionData.size() + " noise conditions & " +
-                                (config.heightConditions != null ? config.heightConditions.size() : 0) + " height conditions & " +
-                                (config.biomeConditions != null ? config.biomeConditions.size() : 0) + " biome conditions");
+
+                if (config == null) {
+                    throw new JsonSyntaxException("Failed to parse config file: empty or invalid content");
+                }
+                if (config.noiseConditionData == null) {
+                    config.noiseConditionData = new ArrayList<>();
+                }
+                if (config.heightConditions == null) {
+                    config.heightConditions = new ArrayList<>();
+                }
+                if (config.biomeConditions == null) {
+                    config.biomeConditions = new ArrayList<>();
+                }
+
+                System.out.println("Loaded configuration with " +
+                        config.noiseConditionData.size() + " noise conditions & " +
+                        config.heightConditions.size() + " height conditions & " +
+                        config.biomeConditions.size() + " biome conditions");
                 return Optional.of(config);
             }
         } catch (IOException | JsonSyntaxException e) {
             e.printStackTrace();
+
+            try {
+                Path configPath = Paths.get(System.getProperty("user.home"), ".noise_samplerGUI-1.5.0", DEFAULT_CONFIG_FILE);
+                if (Files.exists(configPath)) {
+                    String timestamp = LocalDateTime.now().format(
+                            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+                    Path backupPath = configPath.resolveSibling(DEFAULT_CONFIG_FILE + ".backup." + timestamp);
+                    Files.copy(configPath, backupPath);
+                    System.out.println("Corrupted configuration file backed up to: " + backupPath);
+                }
+            } catch (Exception backupEx) {
+                backupEx.printStackTrace();
+            }
+
             JOptionPane.showMessageDialog(parent,
-                    "Failed to load default configuration: " + e.getMessage(),
+                    "Failed to load default configuration: " + e.getMessage() +
+                            "\nA backup of the corrupt file has been created if possible.",
                     "Load Error",
                     JOptionPane.ERROR_MESSAGE);
             return Optional.empty();

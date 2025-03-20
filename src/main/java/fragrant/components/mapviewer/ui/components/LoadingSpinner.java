@@ -1,4 +1,4 @@
-package fragrant.components.mapviewer.ui;
+package fragrant.components.mapviewer.ui.components;
 
 import javax.swing.*;
 import java.awt.*;

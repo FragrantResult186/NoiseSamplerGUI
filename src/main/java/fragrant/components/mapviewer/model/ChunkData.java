@@ -16,10 +16,6 @@ public class ChunkData {
         return blocks;
     }
 
-    public long getTimestamp() {
-        return timestamp;
-    }
-
     public boolean isExpired() {
         return System.currentTimeMillis() - timestamp > EXPIRATION_TIME;
     }

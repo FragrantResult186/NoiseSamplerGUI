@@ -66,7 +66,7 @@ public class NoiseSearchCondition extends JPanel {
         JButton deleteButton = new JButton("Delete");
         upButton.addActionListener(e -> parentPanel.moveConditionUp(this));
         downButton.addActionListener(e -> parentPanel.moveConditionDown(this));
-        deleteButton.addActionListener(e -> parentPanel.removeCondition(this));
+        deleteButton.addActionListener(e -> parentPanel.removeNoiseCondition(this));
 
         JPanel fieldsPanel = new JPanel();
         fieldsPanel.setLayout(new GridBagLayout());

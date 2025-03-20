@@ -17,6 +17,7 @@ import javax.swing.JPanel;
 import fragrant.components.SearchPanel;
 
 import nl.jellejurre.seedchecker.*;
+import org.jetbrains.annotations.NotNull;
 
 public class HeightSearchCondition extends JPanel {
     private final JSpinner minXSpinner, maxXSpinner, minZSpinner, maxZSpinner, minHeightSpinner, maxHeightSpinner;
@@ -47,7 +48,13 @@ public class HeightSearchCondition extends JPanel {
         addComponent(fieldsPanel, "Max Z:", maxZSpinner, gbc, 3);
         addComponent(fieldsPanel, "Min Height:", minHeightSpinner, gbc, 4);
         addComponent(fieldsPanel, "Max Height:", maxHeightSpinner, gbc, 5);
+        JPanel buttonPanel = getJPanel();
 
+        add(fieldsPanel);
+        add(buttonPanel);
+    }
+
+    private @NotNull JPanel getJPanel() {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         JButton upButton = new JButton("↑");
         JButton downButton = new JButton("↓");
@@ -60,9 +67,7 @@ public class HeightSearchCondition extends JPanel {
         buttonPanel.add(upButton);
         buttonPanel.add(downButton);
         buttonPanel.add(deleteButton);
-
-        add(fieldsPanel);
-        add(buttonPanel);
+        return buttonPanel;
     }
 
     private void addComponent(JPanel panel, String label, JComponent component, GridBagConstraints gbc, int gridy) {
@@ -109,6 +114,9 @@ public class HeightSearchCondition extends JPanel {
                     }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
         } finally {
             optimizedChecker.clearMemory();
         }

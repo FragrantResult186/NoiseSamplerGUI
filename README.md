@@ -33,8 +33,12 @@ You can save noise and height conditions in JSON format for future use.
 
 ---
 
-<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/image1.png" width="500"/>
-<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/image2.png" width="500"/>
+I appreciate **4rch** for uncovering the cause of the issue with the jar opening.
+
+---
+
+<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/images/image1.png" width="500"/>
+<img src="https://github.com/FragrantResult186/NoiseSamplerGUI/blob/master/images/image2.png" width="500"/>
 
 ---
 

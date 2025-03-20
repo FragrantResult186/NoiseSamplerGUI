@@ -1,4 +1,4 @@
-package fragrant.components.mapviewer.core;
+package fragrant.components.mapviewer.ui.dialogs;
 
 import javax.swing.table.DefaultTableModel;
 import java.awt.Dialog.ModalityType;
@@ -13,7 +13,7 @@ public class Dialog {
     private JDialog helpDialog;
 
     public void createHelpDialog(Component parent) {
-        helpDialog = new JDialog((Frame) null, "How to Use", ModalityType.MODELESS);
+        helpDialog = new JDialog(null, "How to Use", ModalityType.MODELESS);
         helpDialog.setSize(400, 500);
 
         JTextArea helpText = new JTextArea();
@@ -55,7 +55,7 @@ public class Dialog {
     }
 
     public void createChestContentsDialog(Component parent) {
-        chestContentsDialog = new JDialog((Frame) null, "Chest Contents", ModalityType.MODELESS);
+        chestContentsDialog = new JDialog(null, "Chest Contents", ModalityType.MODELESS);
         chestContentsDialog.setSize(400, 300);
         chestContentsDialog.setLocationRelativeTo(parent);
     }

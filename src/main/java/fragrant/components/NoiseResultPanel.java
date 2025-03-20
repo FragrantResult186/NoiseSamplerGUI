@@ -185,11 +185,11 @@ public class NoiseResultPanel extends JPanel {
         String newDescription = JOptionPane.showInputDialog(
                 this,
                 "Enter new description:",
-                memory.getDescription());
+                memory.description());
 
         if (newDescription != null) {
             seedListModel.setElementAt(
-                    new SeedMemory(memory.getSeed(), newDescription),
+                    new SeedMemory(memory.seed(), newDescription),
                     selectedIndex);
             saveMemories();
         }
