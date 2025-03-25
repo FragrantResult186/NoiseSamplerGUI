@@ -13,7 +13,7 @@ repositories {
 sourceCompatibility = JavaVersion.VERSION_16
 targetCompatibility = JavaVersion.VERSION_16
 
-version = "1.5.0"
+version = "1.5.1"
 group = "fragrant.noisesampler"
 
 def ENV = System.getenv()
@@ -69,7 +69,7 @@ shadowJar {
 
     archiveBaseName.set("NoiseSamplerGUI")
     archiveClassifier.set("")
-    archiveVersion.set("1.5.0")
+    archiveVersion.set("1.5.1")
 }
 
 publishing {
