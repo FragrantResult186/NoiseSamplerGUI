@@ -19,6 +19,7 @@ public class SeedMemoryStorage {
     private static final Gson gson = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new SeedMemory.LocalDateTimeSerializer())
             .registerTypeAdapter(LocalDateTime.class, new SeedMemory.LocalDateTimeDeserializer())
+            .registerTypeAdapter(SeedMemory.class, new SeedMemory.SeedMemoryAdapter())
             .setPrettyPrinting()
             .create();
 

@@ -8,6 +8,25 @@ import com.google.gson.*;
 public record SeedMemory(long seed, String description) {
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ISO_LOCAL_DATE_TIME;
 
+    public static class SeedMemoryAdapter implements JsonSerializer<SeedMemory>, JsonDeserializer<SeedMemory> {
+        @Override
+        public JsonElement serialize(SeedMemory src, Type typeOfSrc, JsonSerializationContext context) {
+            JsonObject jsonObject = new JsonObject();
+            jsonObject.addProperty("seed", src.seed());
+            jsonObject.addProperty("description", src.description());
+            return jsonObject;
+        }
+
+        @Override
+        public SeedMemory deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            JsonObject jsonObject = json.getAsJsonObject();
+            long seed = jsonObject.get("seed").getAsLong();
+            String description = jsonObject.has("description") ?
+                    jsonObject.get("description").getAsString() : "";
+            return new SeedMemory(seed, description);
+        }
+    }
+
     @Override
     public String toString() {
         return String.format("%d%s",
